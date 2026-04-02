@@ -1,5 +1,6 @@
 import type { KeyboardEvent } from "react";
 import clsx from "clsx";
+import type { RecipeDifficulty } from "@/types/ui";
 
 type IngredientInputCardProps = {
   title: string;
@@ -10,9 +11,15 @@ type IngredientInputCardProps = {
   clearLabel: string;
   primaryCta: string;
   secondaryCta: string;
+  difficultyLabel: string;
+  difficultyOptions: { value: RecipeDifficulty; label: string }[];
+  selectedDifficulty: RecipeDifficulty;
   inputValue: string;
   tags: string[];
   examples: string[];
+  onDifficultyChange: (difficulty: RecipeDifficulty) => void;
+  onPrimaryAction: () => void;
+  onSecondaryAction: () => void;
   onInputChange: (value: string) => void;
   onInputKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
   onClearAll: () => void;
@@ -28,9 +35,15 @@ export function IngredientInputCard({
   clearLabel,
   primaryCta,
   secondaryCta,
+  difficultyLabel,
+  difficultyOptions,
+  selectedDifficulty,
   inputValue,
   tags,
   examples,
+  onDifficultyChange,
+  onPrimaryAction,
+  onSecondaryAction,
   onInputChange,
   onInputKeyDown,
   onClearAll,
@@ -102,15 +115,38 @@ export function IngredientInputCard({
           ))}
         </div>
 
+        <div className="mt-6 rounded-[1.5rem] border border-stone-200 bg-stone-50/80 p-4">
+          <p className="text-sm font-semibold text-stone-800">{difficultyLabel}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {difficultyOptions.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => onDifficultyChange(option.value)}
+                className={clsx(
+                  "rounded-full px-4 py-2 text-sm font-medium transition-colors",
+                  selectedDifficulty === option.value
+                    ? "bg-brand-700 text-white"
+                    : "bg-white text-stone-600 hover:bg-brand-50 hover:text-brand-800",
+                )}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="mt-8 grid gap-3 sm:grid-cols-2">
           <button
             type="button"
+            onClick={onPrimaryAction}
             className="inline-flex items-center justify-center rounded-[1.25rem] bg-brand-700 px-5 py-4 text-base font-semibold text-white shadow-lg shadow-brand-200 transition hover:bg-brand-800"
           >
             {primaryCta}
           </button>
           <button
             type="button"
+            onClick={onSecondaryAction}
             className={clsx(
               "inline-flex items-center justify-center rounded-[1.25rem] border px-5 py-4 text-base font-semibold transition",
               "border-brand-200 bg-white text-brand-800 hover:border-brand-300 hover:bg-brand-50",

@@ -1,20 +1,31 @@
+import type { RecipeDifficulty, UiLanguage } from "@/types/ui";
+
+export type LocalizedText = Record<UiLanguage, string>;
+
 export type RecipeIngredient = {
   id: string;
-  name: string;
-  amount?: string;
+  name: LocalizedText;
+  amount?: LocalizedText;
+  keywords: string[];
 };
 
 export type RecipeStep = {
   id: string;
   order: number;
-  instruction: string;
+  title: LocalizedText;
+  instruction: LocalizedText;
+  timerSeconds?: number;
 };
 
 export type Recipe = {
   id: string;
-  title: string;
-  description: string;
-  cookingTimeMinutes?: number;
+  title: LocalizedText;
+  summary: LocalizedText;
+  description: LocalizedText;
+  difficulty: Exclude<RecipeDifficulty, "any">;
+  cookingTimeMinutes: number;
   ingredients: RecipeIngredient[];
+  saves: number;
+  confidence: number;
   steps: RecipeStep[];
 };
