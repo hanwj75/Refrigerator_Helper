@@ -115,5 +115,6 @@ Cloudflare Pages 배포 또는 Pages 로컬 실행 환경에서 `functions/healt
 - build command: `npm run build`
 - build output directory: `dist`
 - Functions directory: `functions`
+- `wrangler.toml`의 `compatibility_date`는 Cloudflare에서 지원하는 현재 또는 과거 날짜여야 함
 - 환경변수: `VITE_API_BASE_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
 - Node/npm이 설치된 환경에서 의존성 설치 후 빌드 검증 필요
