@@ -1,6 +1,7 @@
 import type { KeyboardEvent } from "react";
 import clsx from "clsx";
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { LanguageToggle } from "@/components/common/LanguageToggle";
 import { HeroSection } from "@/components/home/HeroSection";
 import { IngredientInputCard } from "@/components/home/IngredientInputCard";
@@ -8,10 +9,7 @@ import type { UiLanguage } from "@/types/ui";
 
 const copy = {
   ko: {
-    brand: "냉장고 한끼",
-    tagline: "남은 재료를 오늘의 집밥으로 연결하는 실행형 요리 도우미",
     nav: ["서비스 소개", "입력 방식", "저장 예정"],
-    headerCta: "입력 시작",
     badge: "오늘 남은 재료로 바로 메뉴 정하기",
     title: "냉장고 속 재료로",
     highlight: "한 끼 완성",
@@ -36,10 +34,7 @@ const copy = {
     examples: ["예시 재료: 감자", "예시 재료: 참치캔", "예시 재료: 애호박"],
   },
   en: {
-    brand: "Fridge Meal Note",
-    tagline: "A practical cooking helper that turns leftover ingredients into tonight's meal plan",
     nav: ["Overview", "Input Flow", "Saved Later"],
-    headerCta: "Start Adding",
     badge: "Plan tonight's meal from what is already in your fridge",
     title: "Cook from what you",
     highlight: "already have",
@@ -66,10 +61,7 @@ const copy = {
 } satisfies Record<
   UiLanguage,
   {
-    brand: string;
-    tagline: string;
     nav: string[];
-    headerCta: string;
     badge: string;
     title: string;
     highlight: string;
@@ -170,21 +162,16 @@ export function HomePage() {
 
       <div className="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 pb-12 pt-5 sm:px-6 lg:px-8">
         <header className="rounded-[1.75rem] border border-white/70 bg-white/75 px-4 py-4 shadow-[0_12px_40px_rgba(60,88,43,0.08)] backdrop-blur sm:px-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-start gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-700 text-lg font-semibold text-white shadow-lg shadow-brand-200">
-                한
-              </div>
-              <div>
-                <p className="text-lg font-semibold text-stone-900">{currentCopy.brand}</p>
-                <p className="mt-1 max-w-md text-sm leading-5 text-stone-500">
-                  {currentCopy.tagline}
-                </p>
-              </div>
-            </div>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <Link
+              to="/"
+              className="inline-flex self-start rounded-full bg-brand-700 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-200 transition hover:bg-brand-800"
+            >
+              냉장고를 도와줘
+            </Link>
 
-            <div className="flex flex-col gap-4 lg:items-end">
-              <nav className="flex flex-wrap gap-2 text-sm text-stone-500">
+            <div className="flex flex-col gap-3 sm:items-end">
+              <nav className="flex flex-wrap justify-end gap-2 text-sm text-stone-500">
                 {currentCopy.nav.map((item, index) => (
                   <span
                     key={item}
@@ -198,14 +185,8 @@ export function HomePage() {
                 ))}
               </nav>
 
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex justify-end">
                 <LanguageToggle value={language} onChange={handleLanguageChange} />
-                <button
-                  type="button"
-                  className="rounded-full bg-stone-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-stone-800"
-                >
-                  {currentCopy.headerCta}
-                </button>
               </div>
             </div>
           </div>
