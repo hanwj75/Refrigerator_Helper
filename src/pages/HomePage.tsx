@@ -86,8 +86,40 @@ const initialTags: Record<UiLanguage, string[]> = {
   en: ["tofu", "onion", "eggs"],
 };
 
+const tagTranslations: Record<string, string> = {
+  "두부": "tofu",
+  "양파": "onion",
+  "계란": "eggs",
+  "대파": "green onion",
+  "감자": "potato",
+  "참치캔": "canned tuna",
+  "애호박": "zucchini",
+  "tofu": "두부",
+  "onion": "양파",
+  "eggs": "계란",
+  "green onion": "대파",
+  "potato": "감자",
+  "canned tuna": "참치캔",
+  "zucchini": "애호박",
+};
+
 function normalizeTag(tag: string) {
   return tag.trim().replace(/\s+/g, " ");
+}
+
+function translateTag(tag: string, nextLanguage: UiLanguage) {
+  const normalizedTag = normalizeTag(tag);
+  const translatedTag = tagTranslations[normalizedTag];
+
+  if (!translatedTag) {
+    return normalizedTag;
+  }
+
+  if (nextLanguage === "en") {
+    return translatedTag;
+  }
+
+  return translatedTag;
 }
 
 export function HomePage() {
@@ -143,7 +175,14 @@ export function HomePage() {
         return initialTags[nextLanguage];
       }
 
-      return currentTags;
+      const translatedTags = currentTags.map((tag) => translateTag(tag, nextLanguage));
+
+      return translatedTags.filter(
+        (tag, index) =>
+          translatedTags.findIndex(
+            (currentTag) => currentTag.toLocaleLowerCase() === tag.toLocaleLowerCase(),
+          ) === index,
+      );
     });
   };
 
@@ -161,33 +200,31 @@ export function HomePage() {
       <div className="absolute inset-x-0 top-0 h-[420px] bg-[radial-gradient(circle_at_20%_20%,rgba(191,220,178,0.35),transparent_28%),radial-gradient(circle_at_80%_15%,rgba(220,236,198,0.55),transparent_24%),radial-gradient(circle_at_50%_0%,rgba(247,252,240,0.85),transparent_52%)]" />
 
       <div className="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 pb-12 pt-5 sm:px-6 lg:px-8">
-        <header className="rounded-[1.75rem] border border-white/70 bg-white/75 px-4 py-4 shadow-[0_12px_40px_rgba(60,88,43,0.08)] backdrop-blur sm:px-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <Link
-              to="/"
-              className="inline-flex self-start rounded-full bg-brand-700 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-200 transition hover:bg-brand-800"
-            >
-              냉장고를 도와줘
-            </Link>
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <Link
+            to="/"
+            className="inline-flex self-start rounded-full bg-brand-700 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-200 transition hover:bg-brand-800"
+          >
+            냉장고를 도와줘
+          </Link>
 
-            <div className="flex flex-col gap-3 sm:items-end">
-              <nav className="flex flex-wrap justify-end gap-2 text-sm text-stone-500">
-                {currentCopy.nav.map((item, index) => (
-                  <span
-                    key={item}
-                    className={clsx(
-                      "rounded-full px-3 py-2",
-                      index === 0 ? "bg-brand-50 text-brand-800" : "bg-transparent",
-                    )}
-                  >
-                    {item}
-                  </span>
-                ))}
-              </nav>
+          <div className="flex flex-col gap-3 sm:items-end">
+            <nav className="flex flex-wrap justify-end gap-2 text-sm text-stone-500">
+              {currentCopy.nav.map((item, index) => (
+                <span
+                  key={item}
+                  className={clsx(
+                    "rounded-full px-3 py-2",
+                    index === 0 ? "bg-brand-50 text-brand-800" : "bg-transparent",
+                  )}
+                >
+                  {item}
+                </span>
+              ))}
+            </nav>
 
-              <div className="flex justify-end">
-                <LanguageToggle value={language} onChange={handleLanguageChange} />
-              </div>
+            <div className="flex justify-end">
+              <LanguageToggle value={language} onChange={handleLanguageChange} />
             </div>
           </div>
         </header>
