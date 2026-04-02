@@ -6,6 +6,7 @@
     "moduleResolution": "Node",
     "allowSyntheticDefaultImports": true,
     "strict": true,
+    "noEmit": true,
     "types": ["node", "@cloudflare/workers-types"]
   },
   "include": ["vite.config.ts", "tailwind.config.ts", "functions"]

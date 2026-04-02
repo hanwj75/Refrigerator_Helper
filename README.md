@@ -93,7 +93,14 @@ npm install
 npm run dev
 ```
 
-Cloudflare Pages Functions까지 로컬에서 함께 확인하려면 Wrangler 기반 실행을 추가로 붙이는 방향을 권장합니다.
+Cloudflare Pages 배포 전 로컬에서 Functions까지 함께 보려면 아래 흐름으로 확인할 수 있습니다.
+
+```bash
+npm run build
+npm run pages:dev
+```
+
+`pages:dev`는 `dist`와 `functions`를 함께 읽어 Cloudflare Pages와 유사한 로컬 환경을 띄웁니다.
 
 ## Health Check
 
@@ -117,4 +124,4 @@ Cloudflare Pages 배포 또는 Pages 로컬 실행 환경에서 `functions/healt
 - Functions directory: `functions`
 - `wrangler.toml`의 `compatibility_date`는 Cloudflare에서 지원하는 현재 또는 과거 날짜여야 함
 - 환경변수: `VITE_API_BASE_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
-- Node/npm이 설치된 환경에서 의존성 설치 후 빌드 검증 필요
+- 로컬 점검 순서: `npm install` -> `npm run build` -> `npm run pages:dev`
