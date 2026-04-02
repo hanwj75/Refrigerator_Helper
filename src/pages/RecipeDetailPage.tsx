@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { PageTopBar } from "@/components/layout/PageTopBar";
+import { SeoMeta } from "@/components/seo/SeoMeta";
 import { getDifficultyLabel, getIngredientAmount, getIngredientLabel, getLocalizedText, getRecipeById, getRecipeIngredientGroups } from "@/features/recipes/utils";
 import { useRecipeStore } from "@/store/useRecipeStore";
 
@@ -49,6 +50,7 @@ export function RecipeDetailPage() {
   if (!recipe) {
     return (
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 pb-12 pt-5 sm:px-6 lg:px-8">
+        <SeoMeta title={currentCopy.missingTitle} description={currentCopy.missingTitle} />
         <PageTopBar />
         <section className="mt-8 rounded-[2rem] border border-dashed border-stone-300 bg-white p-8 text-center">
           <h1 className="text-2xl font-semibold text-stone-900">{currentCopy.missingTitle}</h1>
@@ -65,6 +67,10 @@ export function RecipeDetailPage() {
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 pb-12 pt-5 sm:px-6 lg:px-8">
+      <SeoMeta
+        title={getLocalizedText(recipe.title, language)}
+        description={getLocalizedText(recipe.description, language)}
+      />
       <PageTopBar />
 
       <section className="mt-8 rounded-[2rem] border border-white/70 bg-white p-6 shadow-[0_20px_60px_rgba(73,98,56,0.12)] sm:p-8">

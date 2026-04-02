@@ -8,11 +8,15 @@ const navigationCopy = {
     { to: "/", label: "홈", end: true },
     { to: "/result", label: "추천 결과" },
     { to: "/saved", label: "저장 목록" },
+    { to: "/about", label: "사이트 소개" },
+    { to: "/contact", label: "문의" },
   ],
   en: [
     { to: "/", label: "Home", end: true },
     { to: "/result", label: "Results" },
     { to: "/saved", label: "Saved" },
+    { to: "/about", label: "About" },
+    { to: "/contact", label: "Contact" },
   ],
 };
 

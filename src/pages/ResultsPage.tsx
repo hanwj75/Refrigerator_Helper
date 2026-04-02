@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { PageTopBar } from "@/components/layout/PageTopBar";
+import { SeoMeta } from "@/components/seo/SeoMeta";
 import { getRecommendedRecipes, getRecipeIngredientGroups, getLocalizedText, getIngredientLabel, getDifficultyLabel, getRecipeById } from "@/features/recipes/utils";
 import { useRecipeStore } from "@/store/useRecipeStore";
 
@@ -55,6 +56,7 @@ export function ResultsPage() {
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 pb-12 pt-5 sm:px-6 lg:px-8">
+      <SeoMeta title={currentCopy.title} description={currentCopy.description} />
       <PageTopBar />
 
       <section className="mt-8 rounded-[2rem] border border-white/70 bg-white/80 p-6 shadow-[0_20px_60px_rgba(73,98,56,0.12)] backdrop-blur sm:p-8">

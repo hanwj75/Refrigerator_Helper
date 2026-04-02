@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { PageTopBar } from "@/components/layout/PageTopBar";
+import { SeoMeta } from "@/components/seo/SeoMeta";
 import { getLocalizedText, getRecipeById } from "@/features/recipes/utils";
 import { useRecipeStore } from "@/store/useRecipeStore";
 
@@ -67,6 +68,7 @@ export function CookingPage() {
   if (!recipe || !currentStep) {
     return (
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 pb-12 pt-5 sm:px-6 lg:px-8">
+        <SeoMeta title={currentCopy.eyebrow} description={currentCopy.missing} />
         <PageTopBar />
         <section className="mt-8 rounded-[2rem] border border-dashed border-stone-300 bg-white p-8 text-center">
           <h1 className="text-2xl font-semibold text-stone-900">{currentCopy.missing}</h1>
@@ -83,6 +85,10 @@ export function CookingPage() {
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 pb-12 pt-5 sm:px-6 lg:px-8">
+      <SeoMeta
+        title={`${getLocalizedText(recipe.title, language)} - ${currentCopy.eyebrow}`}
+        description={getLocalizedText(currentStep.instruction, language)}
+      />
       <PageTopBar />
 
       <section className="mt-8 rounded-[2rem] border border-white/70 bg-white p-6 shadow-[0_20px_60px_rgba(73,98,56,0.12)] sm:p-8">

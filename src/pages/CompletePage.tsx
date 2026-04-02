@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { PageTopBar } from "@/components/layout/PageTopBar";
+import { SeoMeta } from "@/components/seo/SeoMeta";
 import { getLocalizedText, getRecipeById } from "@/features/recipes/utils";
 import { useRecipeStore } from "@/store/useRecipeStore";
 
@@ -37,6 +38,7 @@ export function CompletePage() {
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 pb-12 pt-5 sm:px-6 lg:px-8">
+      <SeoMeta title={currentCopy.title} description={currentCopy.description} />
       <PageTopBar />
 
       <section className="mt-12 rounded-[2rem] border border-white/70 bg-white p-8 text-center shadow-[0_20px_60px_rgba(73,98,56,0.12)] sm:p-12">

@@ -1,4 +1,5 @@
 import { Outlet } from "react-router-dom";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 
 export function AppLayout() {
   return (
@@ -6,6 +7,7 @@ export function AppLayout() {
       <main className="min-h-screen">
         <Outlet />
       </main>
+      <SiteFooter />
     </div>
   );
 }

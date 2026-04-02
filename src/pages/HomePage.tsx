@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { HeroSection } from "@/components/home/HeroSection";
 import { IngredientInputCard } from "@/components/home/IngredientInputCard";
 import { PageTopBar } from "@/components/layout/PageTopBar";
+import { SeoMeta } from "@/components/seo/SeoMeta";
 import {
   normalizeIngredientTag,
   translateIngredientTag,
@@ -37,6 +38,21 @@ const copy = {
       "조리 단계와 저장 기능은 다음 단계에서 연결",
     ],
     examples: ["예시 재료: 감자", "예시 재료: 참치캔", "예시 재료: 애호박"],
+    guideTitle: "이 사이트에서 확인할 수 있는 것",
+    guideSections: [
+      {
+        title: "재료 중심 추천 흐름",
+        body: "냉장고에 실제로 남아 있는 재료를 먼저 정리한 뒤, 만들 수 있는 메뉴 흐름을 확인할 수 있습니다.",
+      },
+      {
+        title: "단계별 조리 진행",
+        body: "선택한 레시피는 단계별 화면으로 이어져 집에서 따라 하기 쉬운 흐름으로 정리됩니다.",
+      },
+      {
+        title: "저장 및 재확인",
+        body: "마음에 든 레시피는 저장 목록에 보관하고 다음 식사 때 다시 확인할 수 있습니다.",
+      },
+    ],
   },
   en: {
     badge: "Plan tonight's meal from what is already in your fridge",
@@ -62,6 +78,21 @@ const copy = {
       "Cooking steps and saving will be connected next",
     ],
     examples: ["Sample: potato", "Sample: tuna", "Sample: zucchini"],
+    guideTitle: "What you can do on this site",
+    guideSections: [
+      {
+        title: "Ingredient-first meal ideas",
+        body: "Start with what is actually left in your fridge and review meal directions that fit those ingredients.",
+      },
+      {
+        title: "Step-by-step cooking flow",
+        body: "Each selected recipe can continue into a structured cooking flow that is easy to follow at home.",
+      },
+      {
+        title: "Save and revisit recipes",
+        body: "Useful recipes can be saved and reopened later when you need another quick home meal idea.",
+      },
+    ],
   },
 } satisfies Record<
   UiLanguage,
@@ -83,6 +114,8 @@ const copy = {
     miniTitle: string;
     miniSteps: string[];
     examples: string[];
+    guideTitle: string;
+    guideSections: { title: string; body: string }[];
   }
 >;
 
@@ -195,6 +228,10 @@ export function HomePage() {
       <div className="absolute inset-x-0 top-0 h-[420px] bg-[radial-gradient(circle_at_20%_20%,rgba(191,220,178,0.35),transparent_28%),radial-gradient(circle_at_80%_15%,rgba(220,236,198,0.55),transparent_24%),radial-gradient(circle_at_50%_0%,rgba(247,252,240,0.85),transparent_52%)]" />
 
       <div className="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 pb-12 pt-5 sm:px-6 lg:px-8">
+        <SeoMeta
+          title="홈"
+          description="냉장고 재료를 입력하고 집에서 실천하기 좋은 메뉴 아이디어와 조리 흐름을 확인할 수 있는 메인 페이지입니다."
+        />
         <PageTopBar />
 
         <div className="mt-6 grid gap-6 lg:mt-8">
@@ -253,6 +290,18 @@ export function HomePage() {
               </div>
             </aside>
           </div>
+
+          <section className="rounded-[2rem] border border-white/70 bg-white/75 p-6 shadow-[0_18px_50px_rgba(73,98,56,0.08)] sm:p-8">
+            <h2 className="text-2xl font-semibold text-stone-900">{currentCopy.guideTitle}</h2>
+            <div className="mt-6 grid gap-4 md:grid-cols-3">
+              {currentCopy.guideSections.map((section) => (
+                <article key={section.title} className="rounded-[1.5rem] bg-stone-50 p-5">
+                  <h3 className="text-lg font-semibold text-stone-900">{section.title}</h3>
+                  <p className="mt-3 text-sm leading-6 text-stone-600">{section.body}</p>
+                </article>
+              ))}
+            </div>
+          </section>
         </div>
       </div>
     </div>
