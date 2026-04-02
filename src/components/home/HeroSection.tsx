@@ -30,10 +30,10 @@ export function HeroSection({
           {benefits.map((benefit) => (
             <span
               key={benefit}
-              className="inline-flex items-center gap-2 rounded-full bg-stone-900 px-4 py-2 text-sm font-medium text-white"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-stone-900 px-5 py-3 text-center text-sm font-medium leading-none text-white"
             >
-              <span className="h-2 w-2 rounded-full bg-brand-300" />
-              {benefit}
+              <span className="mt-px h-2 w-2 shrink-0 rounded-full bg-brand-300" />
+              <span className="whitespace-nowrap">{benefit}</span>
             </span>
           ))}
         </div>
