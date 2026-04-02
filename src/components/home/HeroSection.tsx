@@ -30,7 +30,7 @@ export function HeroSection({
           {benefits.map((benefit) => (
             <span
               key={benefit}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-stone-900 px-5 py-3 text-center text-sm font-medium leading-none text-white"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-stone-900 px-5 py-3 text-center text-sm font-medium leading-none text-white shadow-[0_10px_24px_rgba(28,25,23,0.16)] transition duration-200 hover:-translate-y-0.5 hover:bg-stone-800 hover:shadow-[0_14px_28px_rgba(28,25,23,0.22)]"
             >
               <span className="mt-px h-2 w-2 shrink-0 rounded-full bg-brand-300" />
               <span className="whitespace-nowrap">{benefit}</span>
