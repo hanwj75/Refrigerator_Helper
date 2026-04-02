@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { SITE_ISSUES_URL, SITE_NAME } from "@/lib/site";
+import { SITE_NAME } from "@/lib/site";
 import { useRecipeStore } from "@/store/useRecipeStore";
 
 const footerCopy = {
@@ -10,7 +10,6 @@ const footerCopy = {
     privacy: "개인정보처리방침",
     terms: "이용약관",
     contact: "문의하기",
-    issues: "GitHub 문의 채널",
     notice:
       "본 사이트는 레시피 아이디어와 조리 흐름 정리를 돕기 위한 서비스이며, 실제 재료 상태와 조리 안전은 사용자가 최종 확인해야 합니다.",
   },
@@ -21,7 +20,6 @@ const footerCopy = {
     privacy: "Privacy",
     terms: "Terms",
     contact: "Contact",
-    issues: "GitHub support channel",
     notice:
       "This site is designed to help organize meal ideas and cooking flow. Users should always verify ingredients and cooking safety on their own.",
   },
@@ -56,14 +54,6 @@ export function SiteFooter() {
             <Link to="/contact" className="hover:text-stone-900">
               {currentCopy.contact}
             </Link>
-            <a
-              href={SITE_ISSUES_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="hover:text-stone-900"
-            >
-              {currentCopy.issues}
-            </a>
           </div>
         </div>
 

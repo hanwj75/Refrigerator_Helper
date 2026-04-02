@@ -1,6 +1,5 @@
 import { PageTopBar } from "@/components/layout/PageTopBar";
 import { SeoMeta } from "@/components/seo/SeoMeta";
-import { SITE_ISSUES_URL } from "@/lib/site";
 import { useRecipeStore } from "@/store/useRecipeStore";
 
 const copy = {
@@ -27,10 +26,10 @@ const copy = {
       },
       {
         title: "5. 문의 방법",
-        body: "개인정보와 정책 관련 문의는 GitHub Issues 채널을 통해 접수할 수 있으며, 운영 측은 확인 가능한 범위에서 응답합니다.",
+        body: "개인정보와 정책 관련 문의는 사이트 내 문의 페이지를 통해 접수할 수 있으며, 운영 측은 확인 가능한 범위에서 응답합니다.",
       },
     ],
-    contact: "문의 채널 열기",
+    contact: "문의 페이지로 이동",
   },
   en: {
     title: "Privacy Policy",
@@ -55,10 +54,10 @@ const copy = {
       },
       {
         title: "5. Contact",
-        body: "Privacy and policy-related requests can be sent through the GitHub Issues contact channel, and the operator will review them within a reasonable scope.",
+        body: "Privacy and policy-related requests can be submitted through the contact page on this site, and the operator will review them within a reasonable scope.",
       },
     ],
-    contact: "Open contact channel",
+    contact: "Go to contact page",
   },
 } as const;
 
@@ -88,9 +87,7 @@ export function PrivacyPage() {
         </div>
 
         <a
-          href={SITE_ISSUES_URL}
-          target="_blank"
-          rel="noreferrer"
+          href="/contact"
           className="mt-8 inline-flex rounded-full bg-brand-700 px-5 py-3 text-sm font-semibold text-white"
         >
           {currentCopy.contact}

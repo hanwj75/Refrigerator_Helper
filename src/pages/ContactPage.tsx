@@ -1,48 +1,120 @@
+import { useMemo, useState } from "react";
+import clsx from "clsx";
 import { PageTopBar } from "@/components/layout/PageTopBar";
 import { SeoMeta } from "@/components/seo/SeoMeta";
-import { SITE_ISSUES_URL, SITE_REPOSITORY_URL } from "@/lib/site";
 import { useRecipeStore } from "@/store/useRecipeStore";
+
+type InquiryType = "partnership" | "bug" | "feature";
+
+const FORMSPREE_ENDPOINT = "https://formspree.io/f/mdapaqyw";
 
 const copy = {
   ko: {
     title: "문의하기",
     description:
-      "사이트 이용 중 불편, 오류, 정책 관련 문의는 GitHub Issues 채널을 통해 접수할 수 있습니다.",
-    channelTitle: "문의 채널",
-    channelBody:
-      "현재 운영 문의와 버그 제보는 GitHub Issues를 통해 받고 있습니다. 재현 방법이나 화면 설명을 함께 남겨 주시면 확인에 도움이 됩니다.",
-    supportTitle: "문의 전 확인하면 좋은 내용",
-    supportPoints: [
-      "문제가 발생한 페이지 경로",
-      "사용한 재료 입력 또는 클릭 흐름",
-      "브라우저 또는 기기 정보",
-      "광고/정책 관련 문의일 경우 스크린샷 또는 상황 설명",
+      "필요한 문의 유형을 선택한 뒤 유형에 따른 폼으로 접수해 주세요.",
+    sectionTitle: "문의 유형 선택",
+    nameLabel: "이름",
+    emailLabel: "이메일",
+    subjectLabel: "제목",
+    messageLabel: "문의 내용",
+    submitLabel: "문의 보내기",
+    noteTitle: "문의 전 확인하면 좋은 내용",
+    notes: [
+      "1. 버그 문의는 문제가 발생한 페이지와 재현 순서를 함께 적어 주세요.",
+      "2. 기능추가 건의는 필요한 이유와 기대하는 사용 흐름을 적어 주세요.",
+      "3. 제휴문의는 제안 목적, 협업 형태, 회신 가능한 연락처를 포함해 주세요.",
     ],
-    issues: "GitHub Issues로 문의하기",
-    repository: "저장소 보기",
+
+    placeholders: {
+      name: "이름 또는 팀명을 입력해 주세요",
+      email: "회신 받을 이메일을 입력해 주세요",
+      subject: "문의 제목을 간단히 입력해 주세요",
+      message: "상세 내용을 작성해 주세요",
+    },
+    types: {
+      partnership: {
+        button: "제휴문의",
+        title: "제휴문의",
+        description:
+          "콘텐츠 협업, 브랜드 협업, 캠페인 제안 등 사업적 논의가 필요한 경우 이 양식을 사용해 주세요.",
+        subjectPrefix: "[제휴문의]",
+      },
+      bug: {
+        button: "버그 문의",
+        title: "버그 문의",
+        description:
+          "오류 화면, 버튼 동작 문제, 저장 실패 등 사이트 이용 중 발견한 문제를 알려 주세요.",
+        subjectPrefix: "[버그 문의]",
+      },
+      feature: {
+        button: "기능추가 건의",
+        title: "기능추가 건의",
+        description:
+          "사용 중 아쉬웠던 점이나 추가되면 좋을 기능 아이디어를 구체적으로 남겨 주세요.",
+        subjectPrefix: "[기능추가 건의]",
+      },
+    },
   },
   en: {
     title: "Contact",
     description:
-      "Questions, bug reports, and policy-related requests can be submitted through the GitHub Issues channel.",
-    channelTitle: "Support channel",
-    channelBody:
-      "The current project accepts support and bug reports through GitHub Issues. Sharing the page path and reproduction steps will help us review the issue faster.",
-    supportTitle: "Helpful information to include",
-    supportPoints: [
-      "The page where the issue occurred",
-      "Ingredients entered or the flow you used",
-      "Your browser or device",
-      "A screenshot or context for ads/policy questions",
+      "Please choose the inquiry type you need and submit it through the matching form.",
+    sectionTitle: "Select inquiry type",
+    nameLabel: "Name",
+    emailLabel: "Email",
+    subjectLabel: "Title",
+    messageLabel: "Inquiry details",
+    submitLabel: "Send inquiry",
+    noteTitle: "Helpful points before submitting",
+    notes: [
+      "1. For bug reports, please include the page where the issue happened and the steps to reproduce it.",
+      "2. For feature suggestions, please explain why the feature is needed and how you expect it to be used.",
+      "3. For partnership inquiries, please include the purpose, collaboration format, and a reliable reply contact.",
     ],
-    issues: "Open GitHub Issues",
-    repository: "View repository",
+    placeholders: {
+      name: "Enter your name or team name",
+      email: "Enter the email address for reply",
+      subject: "Enter a short inquiry title",
+      message: "Write the details of your inquiry",
+    },
+    types: {
+      partnership: {
+        button: "Partnership",
+        title: "Partnership",
+        description:
+          "Use this form for business discussions such as content collaborations, brand partnerships, or campaign proposals.",
+        subjectPrefix: "[Partnership]",
+      },
+      bug: {
+        button: "Bug report",
+        title: "Bug report",
+        description:
+          "Please use this form to report problems such as broken pages, button issues, or saving failures while using the site.",
+        subjectPrefix: "[Bug Report]",
+      },
+      feature: {
+        button: "Feature request",
+        title: "Feature suggestion",
+        description:
+          "Please use this form to suggest new features or improvements that would make the service more useful.",
+        subjectPrefix: "[Feature Request]",
+      },
+    },
   },
 } as const;
 
 export function ContactPage() {
   const language = useRecipeStore((state) => state.language);
   const currentCopy = copy[language];
+  const [selectedType, setSelectedType] = useState<InquiryType>("partnership");
+
+  const inquiryConfig = useMemo(
+    () => currentCopy.types[selectedType],
+    [currentCopy.types, selectedType],
+  );
+
+  const inquiryTypes: InquiryType[] = ["partnership", "bug", "feature"];
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 pb-12 pt-5 sm:px-6 lg:px-8">
@@ -52,39 +124,133 @@ export function ContactPage() {
       />
       <PageTopBar />
 
-      <section className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_360px]">
+      <section className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_360px]">
         <article className="rounded-[2rem] border border-white/70 bg-white p-8 shadow-[0_20px_60px_rgba(73,98,56,0.12)]">
-          <h1 className="text-3xl font-semibold text-stone-900">{currentCopy.title}</h1>
-          <p className="mt-4 text-sm leading-7 text-stone-600">{currentCopy.description}</p>
+          <h1 className="text-3xl font-semibold text-stone-900">
+            {currentCopy.title}
+          </h1>
+          <p className="mt-4 text-sm leading-7 text-stone-600">
+            {currentCopy.description}
+          </p>
 
-          <h2 className="mt-8 text-xl font-semibold text-stone-900">{currentCopy.channelTitle}</h2>
-          <p className="mt-3 text-sm leading-7 text-stone-600">{currentCopy.channelBody}</p>
-
-          <div className="mt-6 flex flex-wrap gap-3">
-            <a
-              href={SITE_ISSUES_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="rounded-full bg-brand-700 px-5 py-3 text-sm font-semibold text-white"
-            >
-              {currentCopy.issues}
-            </a>
-            <a
-              href={SITE_REPOSITORY_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="rounded-full border border-stone-200 px-5 py-3 text-sm font-semibold text-stone-700"
-            >
-              {currentCopy.repository}
-            </a>
+          <div className="mt-8">
+            <h2 className="text-lg font-semibold text-stone-900">
+              {currentCopy.sectionTitle}
+            </h2>
+            <div className="mt-4 flex flex-wrap gap-3">
+              {inquiryTypes.map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => setSelectedType(type)}
+                  className={clsx(
+                    "rounded-full px-4 py-2 text-sm font-semibold transition-colors",
+                    selectedType === type
+                      ? "bg-brand-700 text-white"
+                      : "border border-stone-200 bg-white text-stone-700 hover:border-brand-200 hover:text-brand-800",
+                  )}
+                >
+                  {currentCopy.types[type].button}
+                </button>
+              ))}
+            </div>
           </div>
+
+          <div className="mt-8 rounded-[1.5rem] bg-brand-50/70 p-5">
+            <h2 className="text-xl font-semibold text-stone-900">
+              {inquiryConfig.title}
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-stone-600">
+              {inquiryConfig.description}
+            </p>
+          </div>
+
+          <form
+            action={FORMSPREE_ENDPOINT}
+            method="POST"
+            className="mt-8 space-y-5"
+          >
+            <input
+              type="hidden"
+              name="inquiryType"
+              value={inquiryConfig.title}
+            />
+            <input
+              type="hidden"
+              name="_subject"
+              value={`${inquiryConfig.subjectPrefix} ${currentCopy.title}`}
+            />
+
+            <div className="grid gap-5 sm:grid-cols-2">
+              <label className="block">
+                <span className="mb-2 block text-sm font-semibold text-stone-800">
+                  {currentCopy.nameLabel}
+                </span>
+                <input
+                  required
+                  type="text"
+                  name="name"
+                  placeholder={currentCopy.placeholders.name}
+                  className="w-full rounded-[1rem] border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-900 outline-none transition focus:border-brand-300 focus:bg-white"
+                />
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-sm font-semibold text-stone-800">
+                  {currentCopy.emailLabel}
+                </span>
+                <input
+                  required
+                  type="email"
+                  name="email"
+                  placeholder={currentCopy.placeholders.email}
+                  className="w-full rounded-[1rem] border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-900 outline-none transition focus:border-brand-300 focus:bg-white"
+                />
+              </label>
+            </div>
+
+            <label className="block">
+              <span className="mb-2 block text-sm font-semibold text-stone-800">
+                {currentCopy.subjectLabel}
+              </span>
+              <input
+                required
+                type="text"
+                name="subject"
+                placeholder={currentCopy.placeholders.subject}
+                className="w-full rounded-[1rem] border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-900 outline-none transition focus:border-brand-300 focus:bg-white"
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-2 block text-sm font-semibold text-stone-800">
+                {currentCopy.messageLabel}
+              </span>
+              <textarea
+                required
+                name="message"
+                rows={7}
+                placeholder={currentCopy.placeholders.message}
+                className="w-full rounded-[1rem] border border-stone-200 bg-stone-50 px-4 py-3 text-sm leading-6 text-stone-900 outline-none transition focus:border-brand-300 focus:bg-white"
+              />
+            </label>
+
+            <button
+              type="submit"
+              className="rounded-full bg-brand-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-800"
+            >
+              {currentCopy.submitLabel}
+            </button>
+          </form>
         </article>
 
         <aside className="rounded-[2rem] border border-white/70 bg-[#f7f3ea] p-6 shadow-[0_18px_50px_rgba(93,76,53,0.08)]">
-          <h2 className="text-lg font-semibold text-stone-900">{currentCopy.supportTitle}</h2>
+          <h2 className="text-lg font-semibold text-stone-900">
+            {currentCopy.noteTitle}
+          </h2>
           <ul className="mt-4 space-y-3 text-sm leading-6 text-stone-600">
-            {currentCopy.supportPoints.map((point) => (
-              <li key={point}>{point}</li>
+            {currentCopy.notes.map((note) => (
+              <li key={note}>{note}</li>
             ))}
           </ul>
         </aside>

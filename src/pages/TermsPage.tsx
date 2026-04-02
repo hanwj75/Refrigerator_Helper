@@ -22,7 +22,7 @@ const copy = {
       },
       {
         title: "4. 외부 링크 및 제3자 서비스",
-        body: "사이트는 GitHub, Google AdSense 등 외부 서비스를 함께 사용할 수 있습니다. 외부 서비스의 정책과 처리 방식은 각 제공자의 기준을 따릅니다.",
+        body: "사이트는 Google AdSense 등 외부 서비스를 함께 사용할 수 있습니다. 외부 서비스의 정책과 처리 방식은 각 제공자의 기준을 따릅니다.",
       },
       {
         title: "5. 면책",
@@ -49,7 +49,7 @@ const copy = {
       },
       {
         title: "4. External links and third-party services",
-        body: "The site may use third-party services such as GitHub and Google AdSense. Their policies and data handling are governed by each provider.",
+        body: "The site may use third-party services such as Google AdSense. Their policies and data handling are governed by each provider.",
       },
       {
         title: "5. Limitation of liability",

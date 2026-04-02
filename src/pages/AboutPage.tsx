@@ -1,6 +1,5 @@
 import { PageTopBar } from "@/components/layout/PageTopBar";
 import { SeoMeta } from "@/components/seo/SeoMeta";
-import { SITE_REPOSITORY_URL } from "@/lib/site";
 import { useRecipeStore } from "@/store/useRecipeStore";
 
 const copy = {
@@ -19,8 +18,7 @@ const copy = {
     ],
     operationTitle: "운영 및 업데이트 방향",
     operationBody:
-      "현재는 로컬 상태와 mock 데이터를 기반으로 동작하며, 서비스 품질과 사용성 검증 후 점진적으로 기능을 확장할 예정입니다. 운영 관련 문의나 오류 제보는 GitHub 이슈 채널을 통해 받고 있습니다.",
-    repository: "프로젝트 저장소",
+      "현재는 로컬 상태와 mock 데이터를 기반으로 동작하며, 서비스 품질과 사용성 검증 후 점진적으로 기능을 확장할 예정입니다. 운영 관련 문의는 문의 페이지를 통해 접수할 수 있습니다.",
   },
   en: {
     title: "About",
@@ -37,8 +35,7 @@ const copy = {
     ],
     operationTitle: "How the site is operated",
     operationBody:
-      "The current version runs on local state and mock data while the product flow is being refined. Feedback and bug reports are accepted through the GitHub issue channel.",
-    repository: "Project repository",
+      "The current version runs on local state and mock data while the product flow is being refined. Questions or feedback can be submitted through the contact page.",
   },
 } as const;
 
@@ -74,14 +71,6 @@ export function AboutPage() {
           <article className="rounded-[1.5rem] bg-stone-50 p-5">
             <h2 className="text-lg font-semibold text-stone-900">{currentCopy.operationTitle}</h2>
             <p className="mt-3 text-sm leading-6 text-stone-600">{currentCopy.operationBody}</p>
-            <a
-              href={SITE_REPOSITORY_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-4 inline-flex text-sm font-semibold text-brand-800 hover:text-brand-900"
-            >
-              {currentCopy.repository}
-            </a>
           </article>
         </div>
       </section>
