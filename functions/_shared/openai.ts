@@ -30,11 +30,19 @@ function extractOutputText(payload: OpenAIResponsePayload) {
 
   for (const item of payload.output ?? []) {
     for (const content of item.content ?? []) {
-      if (content.type === "output_text" && typeof content.text === "string" && content.text.trim()) {
+      if (
+        content.type === "output_text" &&
+        typeof content.text === "string" &&
+        content.text.trim()
+      ) {
         return content.text;
       }
 
-      if (content.type === "refusal" && typeof content.refusal === "string" && content.refusal.trim()) {
+      if (
+        content.type === "refusal" &&
+        typeof content.refusal === "string" &&
+        content.refusal.trim()
+      ) {
         throw new Error(content.refusal);
       }
     }
@@ -55,7 +63,9 @@ export async function requestOpenAIJson({
   schema: JsonSchemaFormat;
 }) {
   if (!env.OPENAI_API_KEY) {
-    throw new Error("OPENAI_API_KEY is not configured in the Cloudflare environment.");
+    throw new Error(
+      "OPENAI_API_KEY is not configured in the Cloudflare environment.",
+    );
   }
 
   const response = await fetch("https://api.openai.com/v1/responses", {
@@ -65,7 +75,7 @@ export async function requestOpenAIJson({
       Authorization: `Bearer ${env.OPENAI_API_KEY}`,
     },
     body: JSON.stringify({
-      model: env.OPENAI_MODEL ?? "gpt-4o-mini",
+      model: env.OPENAI_MODEL ?? "gpt-5.4-mini",
       input: [
         {
           role: "system",
@@ -91,7 +101,10 @@ export async function requestOpenAIJson({
   const payload = (await response.json()) as OpenAIResponsePayload;
 
   if (!response.ok) {
-    throw new Error(payload.error?.message ?? `OpenAI request failed. status=${response.status}`);
+    throw new Error(
+      payload.error?.message ??
+        `OpenAI request failed. status=${response.status}`,
+    );
   }
 
   const outputText = extractOutputText(payload);
