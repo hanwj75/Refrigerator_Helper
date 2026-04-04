@@ -1,3 +1,8 @@
 name = "refrigerator-helper"
 compatibility_date = "2024-09-23"
 pages_build_output_dir = "dist"
+
+[vars]
+OPENAI_MODEL = "gpt-5.4-mini"
+VITE_SUPABASE_URL = "https://xucryknlhxsiolyyopyk.supabase.co"
+VITE_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_46njilSGGIOxge62H5fneA_7Bfvc1uf"
