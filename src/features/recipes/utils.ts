@@ -3,19 +3,59 @@ import type { GeneratedRecommendation, IngredientTag } from "@/features/recipes/
 import type { LocalizedText } from "@/types/recipe";
 import type { RecipeDifficulty, UiLanguage } from "@/types/ui";
 
+const difficultyLabels: Record<RecipeDifficulty, Record<UiLanguage, string>> = {
+  any: { ko: "전체", en: "All" },
+  간단: { ko: "간단", en: "Easy" },
+  노력: { ko: "노력", en: "Normal" },
+  정성: { ko: "정성", en: "Hard" },
+};
+
 export function getLocalizedText(text: LocalizedText, language: UiLanguage) {
   return text[language];
 }
 
-export function getDifficultyLabel(difficulty: RecipeDifficulty, language: UiLanguage) {
-  const labels: Record<RecipeDifficulty, Record<UiLanguage, string>> = {
-    any: { ko: "전체", en: "All" },
-    간단: { ko: "간단", en: "Easy" },
-    노력: { ko: "노력", en: "Normal" },
-    정성: { ko: "정성", en: "Hard" },
-  };
+export function sanitizeDifficulty(value: unknown): RecipeDifficulty {
+  if (value === "any" || value === "간단" || value === "노력" || value === "정성") {
+    return value;
+  }
 
-  return labels[difficulty][language];
+  if (value === "쉬움") {
+    return "간단";
+  }
+
+  if (value === "보통") {
+    return "노력";
+  }
+
+  if (value === "어려움") {
+    return "정성";
+  }
+
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+
+    if (normalized === "all") {
+      return "any";
+    }
+
+    if (normalized === "easy") {
+      return "간단";
+    }
+
+    if (normalized === "normal" || normalized === "medium") {
+      return "노력";
+    }
+
+    if (normalized === "hard") {
+      return "정성";
+    }
+  }
+
+  return "any";
+}
+
+export function getDifficultyLabel(difficulty: RecipeDifficulty, language: UiLanguage) {
+  return difficultyLabels[sanitizeDifficulty(difficulty)][language];
 }
 
 export function getSelectedIngredientSummary(tags: IngredientTag[], language: UiLanguage) {

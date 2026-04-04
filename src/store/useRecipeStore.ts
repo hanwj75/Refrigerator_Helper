@@ -13,7 +13,7 @@ import type {
   RecipeDetailResponse,
   RecommendRecipeItem,
 } from "@/features/recipes/types";
-import { buildGeneratedRecommendationId } from "@/features/recipes/utils";
+import { buildGeneratedRecommendationId, sanitizeDifficulty } from "@/features/recipes/utils";
 import type { RecipeDifficulty, UiLanguage } from "@/types/ui";
 
 export type AuthUserSummary = {
@@ -189,6 +189,20 @@ export const useRecipeStore = create<RecipeState>()(
     }),
     {
       name: "refrigerator-helper-store",
+      merge: (persistedState, currentState) => {
+        const typedState = persistedState as Partial<RecipeState> | undefined;
+
+        return {
+          ...currentState,
+          ...typedState,
+          selectedIngredients: Array.isArray(typedState?.selectedIngredients)
+            ? typedState.selectedIngredients
+                .map((tag) => sanitizeIngredientTag(tag))
+                .filter((tag): tag is IngredientTag => tag !== null)
+            : currentState.selectedIngredients,
+          selectedDifficulty: sanitizeDifficulty(typedState?.selectedDifficulty),
+        };
+      },
       partialize: (state) => ({
         language: state.language,
         selectedIngredients: state.selectedIngredients,
