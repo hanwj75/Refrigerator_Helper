@@ -2,6 +2,11 @@ import type { KeyboardEvent } from "react";
 import clsx from "clsx";
 import type { RecipeDifficulty } from "@/types/ui";
 
+type IngredientChip = {
+  id: string;
+  label: string;
+};
+
 type IngredientInputCardProps = {
   title: string;
   description: string;
@@ -15,7 +20,7 @@ type IngredientInputCardProps = {
   difficultyOptions: { value: RecipeDifficulty; label: string }[];
   selectedDifficulty: RecipeDifficulty;
   inputValue: string;
-  tags: string[];
+  tags: IngredientChip[];
   examples: string[];
   onDifficultyChange: (difficulty: RecipeDifficulty) => void;
   onPrimaryAction: () => void;
@@ -23,7 +28,7 @@ type IngredientInputCardProps = {
   onInputChange: (value: string) => void;
   onInputKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
   onClearAll: () => void;
-  onRemoveTag: (tag: string) => void;
+  onRemoveTag: (tagId: string) => void;
 };
 
 export function IngredientInputCard({
@@ -74,15 +79,15 @@ export function IngredientInputCard({
           <div className="flex min-h-[76px] flex-wrap items-center gap-3 rounded-[1.25rem] border border-brand-300 bg-white px-3 py-3 shadow-inner shadow-brand-50 sm:px-4">
             {tags.map((tag) => (
               <span
-                key={tag}
+                key={tag.id}
                 className="inline-flex max-w-full items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-2 text-sm font-medium text-brand-900"
               >
-                <span className="max-w-[120px] truncate sm:max-w-[180px]">{tag}</span>
+                <span className="max-w-[120px] truncate sm:max-w-[180px]">{tag.label}</span>
                 <button
                   type="button"
-                  onClick={() => onRemoveTag(tag)}
+                  onClick={() => onRemoveTag(tag.id)}
                   className="rounded-full p-1 text-brand-600 transition hover:bg-brand-100 hover:text-brand-900"
-                  aria-label={`remove ${tag}`}
+                  aria-label={`remove ${tag.label}`}
                 >
                   x
                 </button>

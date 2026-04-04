@@ -4,10 +4,20 @@
     "skipLibCheck": true,
     "module": "ESNext",
     "moduleResolution": "Node",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "noEmit": true,
     "types": ["node", "@cloudflare/workers-types"]
   },
-  "include": ["vite.config.ts", "tailwind.config.ts", "functions"]
+  "include": [
+    "vite.config.ts",
+    "tailwind.config.ts",
+    "functions",
+    "src/**/*.ts",
+    "src/**/*.d.ts"
+  ]
 }

@@ -1,49 +1,78 @@
+import type { IngredientTag } from "@/features/recipes/types";
 import type { UiLanguage } from "@/types/ui";
 
-const ingredientTranslations: Record<string, { ko: string; en: string }> = {
-  "두부": { ko: "두부", en: "tofu" },
-  "tofu": { ko: "두부", en: "tofu" },
-  "양파": { ko: "양파", en: "onion" },
-  "onion": { ko: "양파", en: "onion" },
-  "계란": { ko: "계란", en: "eggs" },
-  "eggs": { ko: "계란", en: "eggs" },
-  "달걀": { ko: "계란", en: "eggs" },
-  "egg": { ko: "계란", en: "eggs" },
-  "대파": { ko: "대파", en: "green onion" },
-  "green onion": { ko: "대파", en: "green onion" },
-  "scallion": { ko: "대파", en: "green onion" },
-  "감자": { ko: "감자", en: "potato" },
-  "potato": { ko: "감자", en: "potato" },
-  "참치캔": { ko: "참치캔", en: "canned tuna" },
-  "canned tuna": { ko: "참치캔", en: "canned tuna" },
-  "tuna": { ko: "참치캔", en: "canned tuna" },
-  "애호박": { ko: "애호박", en: "zucchini" },
-  "zucchini": { ko: "애호박", en: "zucchini" },
-  "김치": { ko: "김치", en: "kimchi" },
-  "kimchi": { ko: "김치", en: "kimchi" },
-  "밥": { ko: "밥", en: "rice" },
-  "rice": { ko: "밥", en: "rice" },
-  "간장": { ko: "간장", en: "soy sauce" },
-  "soy sauce": { ko: "간장", en: "soy sauce" },
-  "된장": { ko: "된장", en: "soybean paste" },
-  "soybean paste": { ko: "된장", en: "soybean paste" },
-  "버섯": { ko: "버섯", en: "mushroom" },
-  "mushroom": { ko: "버섯", en: "mushroom" },
-  "마늘": { ko: "마늘", en: "garlic" },
-  "garlic": { ko: "마늘", en: "garlic" },
-};
+const ingredientDictionary: Array<Omit<IngredientTag, "sourceLanguage"> & { aliases: string[] }> = [
+  { id: "tofu", ko: "두부", en: "tofu", aliases: ["두부", "tofu"] },
+  { id: "onion", ko: "양파", en: "onion", aliases: ["양파", "onion"] },
+  { id: "egg", ko: "계란", en: "eggs", aliases: ["계란", "달걀", "egg", "eggs"] },
+  { id: "green-onion", ko: "대파", en: "green onion", aliases: ["대파", "green onion", "scallion"] },
+  { id: "potato", ko: "감자", en: "potato", aliases: ["감자", "potato"] },
+  { id: "tuna", ko: "참치", en: "tuna", aliases: ["참치", "tuna"] },
+  { id: "canned-tuna", ko: "참치캔", en: "canned tuna", aliases: ["참치캔", "canned tuna"] },
+  { id: "zucchini", ko: "애호박", en: "zucchini", aliases: ["애호박", "zucchini"] },
+  { id: "kimchi", ko: "김치", en: "kimchi", aliases: ["김치", "kimchi"] },
+  { id: "rice", ko: "밥", en: "rice", aliases: ["밥", "rice"] },
+  { id: "soy-sauce", ko: "간장", en: "soy sauce", aliases: ["간장", "soy sauce"] },
+  { id: "soybean-paste", ko: "된장", en: "soybean paste", aliases: ["된장", "soybean paste"] },
+  { id: "mushroom", ko: "버섯", en: "mushroom", aliases: ["버섯", "mushroom"] },
+  { id: "garlic", ko: "마늘", en: "garlic", aliases: ["마늘", "garlic"] },
+];
 
-export function normalizeIngredientTag(tag: string) {
-  return tag.trim().replace(/\s+/g, " ").toLocaleLowerCase();
+export function normalizeIngredientTag(value: string) {
+  return value.trim().replace(/\s+/g, " ").toLocaleLowerCase();
 }
 
-export function translateIngredientTag(tag: string, language: UiLanguage) {
-  const normalizedTag = normalizeIngredientTag(tag);
-  const translatedTag = ingredientTranslations[normalizedTag];
+export function createIngredientTag(rawValue: string, inputLanguage: UiLanguage): IngredientTag {
+  const cleaned = rawValue.trim().replace(/\s+/g, " ");
+  const normalized = normalizeIngredientTag(cleaned);
+  const matched = ingredientDictionary.find((item) =>
+    item.aliases.some((alias) => normalizeIngredientTag(alias) === normalized),
+  );
 
-  if (!translatedTag) {
-    return tag.trim().replace(/\s+/g, " ");
+  if (matched) {
+    return {
+      id: matched.id,
+      ko: matched.ko,
+      en: matched.en,
+      sourceLanguage: inputLanguage,
+    };
   }
 
-  return translatedTag[language];
+  return {
+    id: normalized,
+    ko: inputLanguage === "ko" ? cleaned : "",
+    en: inputLanguage === "en" ? cleaned : "",
+    sourceLanguage: inputLanguage,
+  };
+}
+
+export function getIngredientTagLabel(tag: IngredientTag, language: UiLanguage) {
+  return tag[language] || tag[tag.sourceLanguage] || tag.ko || tag.en || tag.id;
+}
+
+export function toLanguageIngredients(tags: IngredientTag[], language: UiLanguage) {
+  return tags.map((tag) => getIngredientTagLabel(tag, language));
+}
+
+export function resolveIngredientResponseLanguage(
+  tags: IngredientTag[],
+  fallbackLanguage: UiLanguage,
+): UiLanguage {
+  if (tags.length === 0) {
+    return fallbackLanguage;
+  }
+
+  const counts = tags.reduce(
+    (acc, tag) => {
+      acc[tag.sourceLanguage] += 1;
+      return acc;
+    },
+    { ko: 0, en: 0 },
+  );
+
+  if (counts.ko === counts.en) {
+    return fallbackLanguage;
+  }
+
+  return counts.ko > counts.en ? "ko" : "en";
 }

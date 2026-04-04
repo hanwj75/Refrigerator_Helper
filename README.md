@@ -1,127 +1,284 @@
-# Refrigerator Helper MVP Starter
+# Refrigerator Helper
 
-냉장고 재료 기반 요리 추천 웹앱 MVP를 빠르게 개발 시작하기 위한 초기 세팅입니다.  
-현재 단계는 기능 구현 전의 개발 골격만 구성하며, 추후 OpenAI API, Supabase, 저장 기능, 단계별 요리 진행 기능을 붙일 수 있도록 구조를 정리해 둔 상태입니다.
+Refrigerator Helper is a React + Vite + TypeScript project for turning ingredients already at home into realistic meal ideas and step-by-step cooking guidance. The app currently supports mock browsing flows, Supabase-ready save and vote foundations, and server-side OpenAI recipe generation through Cloudflare Pages Functions.
 
-## 포함된 구성
+## Stack
 
-- React + TypeScript + Vite
+- React
+- Vite
+- TypeScript
 - Tailwind CSS
 - React Router
 - Zustand
 - TanStack Query
 - Cloudflare Pages Functions
-- Supabase 연결 자리
-- ESLint / Prettier
+- Supabase
+- OpenAI Responses API
+- Zod
 
-## 폴더 구조
-
-```text
-.
-├─ functions/
-│  └─ health.ts
-├─ public/
-├─ src/
-│  ├─ api/
-│  │  └─ client.ts
-│  ├─ app/
-│  │  ├─ providers.tsx
-│  │  └─ router.tsx
-│  ├─ components/
-│  │  └─ layout/
-│  │     └─ AppLayout.tsx
-│  ├─ features/
-│  ├─ hooks/
-│  ├─ lib/
-│  │  ├─ env.ts
-│  │  └─ supabase.ts
-│  ├─ pages/
-│  │  ├─ CompletePage.tsx
-│  │  ├─ CookingPage.tsx
-│  │  ├─ HomePage.tsx
-│  │  ├─ RecipeDetailPage.tsx
-│  │  ├─ ResultsPage.tsx
-│  │  └─ SavedRecipesPage.tsx
-│  ├─ store/
-│  │  └─ useRecipeStore.ts
-│  ├─ styles/
-│  │  └─ globals.css
-│  ├─ types/
-│  │  └─ recipe.ts
-│  ├─ main.tsx
-│  └─ vite-env.d.ts
-├─ .env.example
-├─ eslint.config.js
-├─ index.html
-├─ package.json
-├─ postcss.config.js
-├─ tailwind.config.ts
-├─ tsconfig.app.json
-├─ tsconfig.json
-├─ tsconfig.node.json
-├─ vite.config.ts
-└─ wrangler.toml
-```
-
-## 라우트
-
-- `/`
-- `/result`
-- `/recipe/:id`
-- `/cook/:id`
-- `/complete`
-- `/saved`
-
-## 현재 상태
-
-- 각 페이지는 placeholder 텍스트만 표시합니다.
-- `AppLayout`에는 최소 헤더와 라우팅 이동 링크만 있습니다.
-- `providers.tsx`에 TanStack Query Provider가 연결되어 있습니다.
-- `useRecipeStore.ts`는 최소 Zustand 상태만 정의합니다.
-- `env.ts`, `supabase.ts`, `api/client.ts`는 추후 연동을 위한 뼈대만 제공합니다.
-- `functions/health.ts`는 Cloudflare Pages Functions용 health check 엔드포인트입니다.
-
-## 설치
+## Local development
 
 ```bash
 npm install
-```
-
-## 실행
-
-```bash
 npm run dev
 ```
 
-Cloudflare Pages 배포 전 로컬에서 Functions까지 함께 보려면 아래 흐름으로 확인할 수 있습니다.
+For a Cloudflare Pages style local run:
 
 ```bash
 npm run build
 npm run pages:dev
 ```
 
-`pages:dev`는 `dist`와 `functions`를 함께 읽어 Cloudflare Pages와 유사한 로컬 환경을 띄웁니다.
+## Environment variables
 
-## Health Check
+Create a local `.env` file and fill these values:
 
-Cloudflare Pages 배포 또는 Pages 로컬 실행 환경에서 `functions/health.ts`는 보통 아래 URL로 노출됩니다.
-
-```text
-/health
+```bash
+VITE_APP_NAME=Refrigerator Helper
+VITE_API_BASE_URL=http://localhost:8788
+VITE_SUPABASE_URL=
+VITE_SUPABASE_PUBLISHABLE_KEY=
+OPENAI_API_KEY=
+OPENAI_MODEL=
 ```
 
-## 다음 작업 추천
+Notes:
 
-1. `features/` 아래에 재료 입력, 추천 결과, 레시피 상세 UI를 mock 데이터 기반으로 나눕니다.
-2. Cloudflare Pages 로컬 개발을 위해 `wrangler pages dev dist` 또는 관련 스크립트를 추가합니다.
-3. Supabase 프로젝트가 준비되면 `.env`를 채우고 `supabase.ts`를 실제 연결로 확장합니다.
-4. OpenAI 호출 전, Functions 레이어에 API 계약과 에러 포맷을 먼저 정의합니다.
+- `VITE_SUPABASE_URL` is your Supabase project URL.
+- `VITE_SUPABASE_PUBLISHABLE_KEY` is the browser-safe publishable key from Supabase.
+- Do not put the Supabase `service_role` key in frontend code.
+- `OPENAI_API_KEY` must stay server-side only.
+- `OPENAI_MODEL` is optional and defaults to `gpt-4o-mini` when omitted.
 
-## Cloudflare Pages 배포 전 체크
+For local `wrangler pages dev`, you can also put the server-only values in `.dev.vars`:
 
-- build command: `npm run build`
-- build output directory: `dist`
-- Functions directory: `functions`
-- `wrangler.toml`의 `compatibility_date`는 Cloudflare에서 지원하는 현재 또는 과거 날짜여야 함
-- 환경변수: `VITE_API_BASE_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
-- 로컬 점검 순서: `npm install` -> `npm run build` -> `npm run pages:dev`
+```bash
+OPENAI_API_KEY=
+OPENAI_MODEL=gpt-4o-mini
+```
+
+In production, set the same server-only variables in the Cloudflare Pages project settings.
+
+## Supabase setup
+
+### 1. Run the SQL schema
+
+Run the full SQL in [supabase/schema.sql](./supabase/schema.sql) inside the Supabase SQL Editor.
+
+The script creates only these tables:
+
+- `profiles`
+- `recipes`
+- `saved_recipes`
+- `recipe_votes`
+
+It also creates:
+
+- indexes for search and sorting
+- an `updated_at` trigger for `recipes`
+- a trigger to create `profiles` rows when users sign up
+- triggers to maintain `recipes.total_save_count` and `recipes.total_vote_count`
+- RLS policies for each table
+
+### 2. Enable Google auth provider
+
+In the Supabase dashboard:
+
+1. Go to `Authentication -> Providers`
+2. Enable `Google`
+3. Add your Google OAuth client ID and client secret
+
+### 3. Configure Google OAuth redirect URLs
+
+There are two places to configure redirects:
+
+1. In Supabase:
+   Go to `Authentication -> URL Configuration`
+2. In Google Cloud Console:
+   Add the same redirect URLs to your OAuth client
+
+Common redirect URLs:
+
+- Local: `http://localhost:5173`
+- Production: your deployed site origin
+- Supabase callback: `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback`
+
+The frontend currently sends users back to:
+
+```text
+window.location.origin + "/"
+```
+
+### 4. Seed recipe data
+
+The schema is ready for saved recipes and votes, but those features require actual rows in `public.recipes`.
+
+Important:
+
+- saved recipes and votes reference `recipes.id`
+- the current UI still uses local mock recipe content for browsing
+- if you want saved recipes and votes to line up with the current mock UI, seed the same recipe IDs into `public.recipes`
+
+## RLS policy summary
+
+### `profiles`
+
+- users can read only their own profile
+- users can update only their own profile
+- normal clients do not insert profiles directly
+- profiles are created by an auth trigger
+
+### `recipes`
+
+- everyone can read recipes
+- public clients cannot insert, update, or delete recipes
+- writes are reserved for future admin or server-side flows
+
+### `saved_recipes`
+
+- signed-in users can read only their own saved recipes
+- signed-in users can insert only their own saved recipe rows
+- signed-in users can delete only their own saved recipe rows
+
+### `recipe_votes`
+
+- signed-in users can read only their own vote rows
+- signed-in users can insert only their own vote rows
+- signed-in users can delete only their own vote rows
+
+## Auth and recipe APIs
+
+Frontend Supabase integration includes:
+
+- `src/lib/supabase.ts`
+- `src/features/auth/api.ts`
+- `src/features/auth/hooks.ts`
+- `src/features/auth/components/GoogleLoginButton.tsx`
+- `src/features/recipes/api.ts`
+- `src/features/recipes/types.ts`
+
+Prepared auth functions:
+
+- Google sign-in
+- sign-out
+- current session lookup
+- auth state change subscription
+- current user state sync through Zustand
+
+Prepared recipe functions:
+
+- `saveRecipe(recipeId)`
+- `unsaveRecipe(recipeId)`
+- `upvoteRecipe(recipeId)`
+- `removeVote(recipeId)`
+- `getMySavedRecipes()`
+- `getMyVotes()`
+
+These functions only write to:
+
+- `saved_recipes`
+- `recipe_votes`
+
+Recipe counts are updated by database triggers, not by frontend code.
+
+## OpenAI recipe APIs
+
+The project includes Cloudflare Pages Functions that call the OpenAI API only on the server side.
+
+Endpoints:
+
+- `POST /api/recommend`
+- `POST /api/recipe-detail`
+
+Implementation files:
+
+- `functions/api/recommend.ts`
+- `functions/api/recipe-detail.ts`
+- `functions/_shared/openai.ts`
+- `functions/_shared/http.ts`
+- `functions/_shared/prompts.ts`
+- `functions/_shared/schemas.ts`
+- `src/features/recipes/api.ts`
+- `src/features/recipes/types.ts`
+
+### Recommendation request
+
+```json
+{
+  "ingredients_owned": ["김치", "밥", "계란"],
+  "difficulty": "간단",
+  "excluded_ingredients": ["땅콩"],
+  "max_cooking_time_minutes": 20,
+  "servings": 2,
+  "cuisine_preference": "한식"
+}
+```
+
+### Recommendation response
+
+```json
+{
+  "recipes": [
+    {
+      "recipe_name": "김치볶음밥",
+      "difficulty": "간단",
+      "used_ingredients": ["김치", "밥", "계란"],
+      "required_ingredients": ["대파"],
+      "cooking_time_minutes": 15,
+      "short_description": "남은 김치와 밥으로 빠르게 만들 수 있는 한 끼 메뉴입니다.",
+      "confidence_note": "추가 재료 1개 필요"
+    }
+  ]
+}
+```
+
+### Recipe detail request
+
+```json
+{
+  "recipe_name": "김치볶음밥",
+  "difficulty": "간단",
+  "ingredients_owned": ["김치", "밥", "계란"],
+  "used_ingredients": ["김치", "밥", "계란"],
+  "required_ingredients": ["대파"]
+}
+```
+
+### Recipe detail response
+
+```json
+{
+  "recipe_name": "김치볶음밥",
+  "difficulty": "간단",
+  "total_cooking_time_minutes": 15,
+  "tips": ["찬밥을 쓰면 식감이 더 잘 살아납니다."],
+  "steps": [
+    {
+      "step_order": 1,
+      "step_title": "재료 준비",
+      "instruction": "김치 1컵은 잘게 썰고 대파 1/2대는 송송 썬다. 계란 1개는 가볍게 풀어 둔다.",
+      "timer_seconds": null
+    }
+  ]
+}
+```
+
+### Validation behavior
+
+- OpenAI responses are requested with `json_schema` format through the Responses API.
+- Returned content is parsed strictly as JSON and validated again with Zod at runtime.
+- If the model returns non-JSON content or a payload that does not match the schema, the API returns a structured failure response.
+- This stage does not write generated recipes into the database.
+
+## Current behavior
+
+- guests can still browse home, results, recipe detail, and cooking pages
+- signed-in users can save recipes and record recommendations once Supabase is configured and recipe rows exist
+- OpenAI recipe generation runs only through Cloudflare Pages Functions
+
+## Next UI integration steps
+
+1. Replace mock recommendation loading in `ResultsPage` with `requestRecipeRecommendations`.
+2. Replace mock detail loading in `RecipeDetailPage` with `requestRecipeDetail`.
+3. Upsert generated recipes into `public.recipes` only when the user saves or recommends a recipe later.

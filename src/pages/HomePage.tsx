@@ -1,308 +1,215 @@
-import type { KeyboardEvent } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState, type KeyboardEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { HeroSection } from "@/components/home/HeroSection";
 import { IngredientInputCard } from "@/components/home/IngredientInputCard";
 import { PageTopBar } from "@/components/layout/PageTopBar";
 import { SeoMeta } from "@/components/seo/SeoMeta";
 import {
+  createIngredientTag,
+  getIngredientTagLabel,
   normalizeIngredientTag,
-  translateIngredientTag,
 } from "@/features/recipes/ingredientDictionary";
 import { getDifficultyLabel } from "@/features/recipes/utils";
+import type { IngredientTag } from "@/features/recipes/types";
 import { useRecipeStore } from "@/store/useRecipeStore";
-import type { RecipeDifficulty, UiLanguage } from "@/types/ui";
+import type { RecipeDifficulty } from "@/types/ui";
+
+const starterTags: IngredientTag[] = [
+  { id: "tofu", ko: "두부", en: "tofu", sourceLanguage: "ko" },
+  { id: "onion", ko: "양파", en: "onion", sourceLanguage: "ko" },
+  { id: "egg", ko: "계란", en: "eggs", sourceLanguage: "ko" },
+];
 
 const copy = {
   ko: {
+    seoTitle: "홈",
+    seoDescription: "냉장고 재료를 정리하고 오늘 바로 만들 수 있는 메뉴를 추천받아 보세요.",
     badge: "오늘 남은 재료로 바로 메뉴 정하기",
     title: "냉장고 속 재료로",
     highlight: "한 끼 완성",
     description:
-      "바쁜 저녁에도 있는 재료만 정리해서 넣으면, 바로 만들어 먹기 좋은 집밥 방향을 잡을 수 있도록 설계된 첫 화면입니다.",
+      "남아 있는 재료를 태그로 정리하면 오늘 저녁에 바로 만들 수 있는 현실적인 집밥 방향을 빠르게 잡아볼 수 있습니다.",
     benefits: ["현실적인 집밥 중심", "남은 재료 정리형 UX", "한눈에 입력되는 태그 방식"],
-    cardTitle: "지금 있는 재료를 담아보세요",
+    cardTitle: "지금 있는 재료를 적어보세요",
     cardDescription:
-      "채소, 단백질, 소스처럼 생각나는 재료를 편하게 입력해 두면 다음 단계에서 추천 흐름을 붙이기 좋게 구성했습니다.",
-    placeholder: "예: 두부, 양파, 대파, 계란",
-    hint: "엔터 또는 쉼표를 누르면 재료 태그가 추가됩니다.",
-    helper: "중복 재료는 자동으로 제외됩니다.",
-    clearLabel: "전체 비우기",
+      "채소, 단백질, 기본 재료를 자연스럽게 입력하면 추천 흐름에 바로 반영됩니다.",
+    placeholder: "예: 김치, 양파, 계란, 두부",
+    hint: "엔터 또는 쉼표를 누르면 태그로 추가됩니다.",
+    helper: "재료는 화면 언어와 별개로 안정적으로 보관됩니다.",
+    clearLabel: "전체 삭제",
     primaryCta: "이 재료로 메뉴 잡아보기",
-    secondaryCta: "예시 재료 다시 담기",
-    difficultyLabel: "원하는 난이도",
-    miniTitle: "입력 흐름 미리보기",
+    secondaryCta: "예시 태그 다시 넣기",
+    difficultyLabel: "난이도 선택",
+    examples: ["예: 김치", "예: 양파", "예: 계란"],
+    miniTitle: "이렇게 이어집니다",
     miniSteps: [
-      "냉장고에 남은 재료를 태그처럼 빠르게 입력",
-      "현실적인 메뉴 후보와 준비 순서 확인",
-      "조리 단계와 저장 기능은 다음 단계에서 연결",
-    ],
-    examples: ["예시 재료: 감자", "예시 재료: 참치캔", "예시 재료: 애호박"],
-    guideTitle: "이 사이트에서 확인할 수 있는 것",
-    guideSections: [
-      {
-        title: "재료 중심 추천 흐름",
-        body: "냉장고에 실제로 남아 있는 재료를 먼저 정리한 뒤, 만들 수 있는 메뉴 흐름을 확인할 수 있습니다.",
-      },
-      {
-        title: "단계별 조리 진행",
-        body: "선택한 레시피는 단계별 화면으로 이어져 집에서 따라 하기 쉬운 흐름으로 정리됩니다.",
-      },
-      {
-        title: "저장 및 재확인",
-        body: "마음에 든 레시피는 저장 목록에 보관하고 다음 식사 때 다시 확인할 수 있습니다.",
-      },
+      "재료를 태그로 정리합니다.",
+      "난이도를 고르고 추천을 확인합니다.",
+      "상세 레시피와 요리 단계를 이어서 봅니다.",
     ],
   },
   en: {
+    seoTitle: "Home",
+    seoDescription: "Organize your fridge ingredients and get realistic meal ideas for today.",
     badge: "Plan tonight's meal from what is already in your fridge",
     title: "Cook from what you",
     highlight: "already have",
     description:
-      "This mockup focuses on helping people sort everyday ingredients first, so the next step can become a realistic meal suggestion instead of a generic recipe list.",
-    benefits: ["Built for everyday home meals", "Quick leftover-first input", "Tag-based ingredient flow"],
+      "Sort the ingredients you already have into tags and get realistic home-cooking ideas you can actually make tonight.",
+    benefits: ["Built for everyday meals", "Leftover-first ingredient flow", "Fast tag-based input"],
     cardTitle: "Add the ingredients you have right now",
     cardDescription:
-      "Type vegetables, proteins, sauces, or staples in the most natural way. The next product step can build recommendations on top of this simple input flow.",
-    placeholder: "e.g. tofu, onion, green onion, eggs",
-    hint: "Press Enter or type a comma to add an ingredient tag.",
-    helper: "Duplicate ingredients are ignored automatically.",
+      "Type vegetables, proteins, or staples naturally and use them as the starting point for recipe suggestions.",
+    placeholder: "e.g. kimchi, onion, eggs, tofu",
+    hint: "Press Enter or comma to add a tag.",
+    helper: "Ingredient data stays stable even when the UI language changes.",
     clearLabel: "Clear all",
-    primaryCta: "See meal ideas",
-    secondaryCta: "Reset example ingredients",
-    difficultyLabel: "Preferred difficulty",
-    miniTitle: "How this flow will work",
+    primaryCta: "Find recipes with these ingredients",
+    secondaryCta: "Restore sample tags",
+    difficultyLabel: "Choose difficulty",
+    examples: ["e.g. kimchi", "e.g. onion", "e.g. eggs"],
+    miniTitle: "How it works",
     miniSteps: [
-      "Add ingredients as quick tags from your fridge",
-      "Review realistic meal ideas and prep direction",
-      "Cooking steps and saving will be connected next",
-    ],
-    examples: ["Sample: potato", "Sample: tuna", "Sample: zucchini"],
-    guideTitle: "What you can do on this site",
-    guideSections: [
-      {
-        title: "Ingredient-first meal ideas",
-        body: "Start with what is actually left in your fridge and review meal directions that fit those ingredients.",
-      },
-      {
-        title: "Step-by-step cooking flow",
-        body: "Each selected recipe can continue into a structured cooking flow that is easy to follow at home.",
-      },
-      {
-        title: "Save and revisit recipes",
-        body: "Useful recipes can be saved and reopened later when you need another quick home meal idea.",
-      },
+      "Organize ingredients as quick tags.",
+      "Choose a difficulty level and view recommendations.",
+      "Open the detailed recipe and follow the cooking steps.",
     ],
   },
-} satisfies Record<
-  UiLanguage,
-  {
-    badge: string;
-    title: string;
-    highlight: string;
-    description: string;
-    benefits: string[];
-    cardTitle: string;
-    cardDescription: string;
-    placeholder: string;
-    hint: string;
-    helper: string;
-    clearLabel: string;
-    primaryCta: string;
-    secondaryCta: string;
-    difficultyLabel: string;
-    miniTitle: string;
-    miniSteps: string[];
-    examples: string[];
-    guideTitle: string;
-    guideSections: { title: string; body: string }[];
-  }
->;
+} as const;
 
-const initialTags: Record<UiLanguage, string[]> = {
-  ko: ["두부", "양파", "계란"],
-  en: ["tofu", "onion", "eggs"],
-};
-
-function normalizeTag(tag: string) {
-  return tag.trim().replace(/\s+/g, " ");
+function buildUniqueTags(tags: IngredientTag[]) {
+  return tags.filter(
+    (tag, index, array) =>
+      array.findIndex((candidate) => normalizeIngredientTag(candidate.id) === normalizeIngredientTag(tag.id)) ===
+      index,
+  );
 }
 
 export function HomePage() {
   const navigate = useNavigate();
   const language = useRecipeStore((state) => state.language);
-  const selectedIngredients = useRecipeStore((state) => state.selectedIngredients);
   const selectedDifficulty = useRecipeStore((state) => state.selectedDifficulty);
   const setSelectedIngredients = useRecipeStore((state) => state.setSelectedIngredients);
+  const setHasSubmittedRecommendationRequest = useRecipeStore(
+    (state) => state.setHasSubmittedRecommendationRequest,
+  );
   const setSelectedDifficulty = useRecipeStore((state) => state.setSelectedDifficulty);
   const generateRecommendations = useRecipeStore((state) => state.generateRecommendations);
+  const clearGeneratedRecommendations = useRecipeStore((state) => state.clearGeneratedRecommendations);
   const currentCopy = copy[language];
-  const previousLanguageRef = useRef(language);
 
   const [inputValue, setInputValue] = useState("");
-  const [tags, setTags] = useState<string[]>(
-    selectedIngredients.length > 0 ? selectedIngredients : initialTags[language],
-  );
-
-  const addTag = (rawValue: string) => {
-    const nextTag = normalizeTag(rawValue.replace(/,$/, ""));
-
-    if (!nextTag) {
-      return;
-    }
-
-    setTags((currentTags) => {
-      const hasTag = currentTags.some(
-        (tag) => normalizeIngredientTag(tag) === normalizeIngredientTag(nextTag),
-      );
-
-      return hasTag ? currentTags : [...currentTags, nextTag];
-    });
-  };
-
-  const handleInputChange = (value: string) => {
-    if (value.includes(",")) {
-      const segments = value.split(",");
-      const committedTags = segments.slice(0, -1);
-
-      committedTags.forEach(addTag);
-      setInputValue(segments[segments.length - 1] ?? "");
-      return;
-    }
-
-    setInputValue(value);
-  };
-
-  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key !== "Enter") {
-      return;
-    }
-
-    event.preventDefault();
-    addTag(inputValue);
-    setInputValue("");
-  };
-
-  useEffect(() => {
-    if (previousLanguageRef.current === language) {
-      return;
-    }
-
-    setTags((currentTags) =>
-      (currentTags.length === 0 ? initialTags[language] : currentTags).map((tag) =>
-        translateIngredientTag(tag, language),
-      ),
-    );
-    previousLanguageRef.current = language;
-  }, [language]);
+  const [tags, setTags] = useState<IngredientTag[]>(starterTags);
 
   const difficultyOptions = useMemo(
     () =>
-      (["any", "easy", "medium", "hard"] as RecipeDifficulty[]).map((difficulty) => ({
-        value: difficulty,
-        label: getDifficultyLabel(difficulty, language),
+      (["any", "간단", "노력", "정성"] as RecipeDifficulty[]).map((value) => ({
+        value,
+        label: getDifficultyLabel(value, language),
       })),
     [language],
   );
 
-  const miniCards = useMemo(
-    () =>
-      currentCopy.miniSteps.map((step, index) => ({
-        step,
-        number: `0${index + 1}`,
-      })),
-    [currentCopy.miniSteps],
+  const visibleTags = tags.map((tag) => ({
+    id: tag.id,
+    label: getIngredientTagLabel(tag, language),
+  }));
+
+  const validTags = tags.filter(
+    (tag) => getIngredientTagLabel(tag, "ko").trim() || getIngredientTagLabel(tag, "en").trim(),
   );
 
-  const commitSelectionAndNavigate = () => {
-    const nextTags = tags.length > 0 ? tags : initialTags[language];
+  const commitTag = (rawValue: string) => {
+    const trimmed = rawValue.trim();
 
-    setSelectedIngredients(nextTags);
+    if (!trimmed) {
+      return;
+    }
+
+    const nextTag = createIngredientTag(trimmed, language);
+
+    setTags((current) => buildUniqueTags([...current, nextTag]));
+    setInputValue("");
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter" || event.key === ",") {
+      event.preventDefault();
+      commitTag(inputValue.replace(/,$/, ""));
+    }
+  };
+
+  const handleSubmit = () => {
+    if (validTags.length === 0) {
+      setSelectedIngredients([]);
+      setHasSubmittedRecommendationRequest(false);
+      setSelectedDifficulty(selectedDifficulty);
+      clearGeneratedRecommendations();
+      navigate("/result");
+      return;
+    }
+
+    setSelectedIngredients(validTags);
     setSelectedDifficulty(selectedDifficulty);
-    generateRecommendations(nextTags, selectedDifficulty);
+    setHasSubmittedRecommendationRequest(true);
+    clearGeneratedRecommendations();
+    generateRecommendations(validTags, selectedDifficulty);
     navigate("/result");
   };
 
+  const handleRestoreSamples = () => {
+    setTags(starterTags);
+  };
+
   return (
-    <div className="relative overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(231,241,222,0.9),_rgba(250,248,243,0.98)_45%,_rgba(248,245,240,1)_100%)]">
-      <div className="absolute inset-x-0 top-0 h-[420px] bg-[radial-gradient(circle_at_20%_20%,rgba(191,220,178,0.35),transparent_28%),radial-gradient(circle_at_80%_15%,rgba(220,236,198,0.55),transparent_24%),radial-gradient(circle_at_50%_0%,rgba(247,252,240,0.85),transparent_52%)]" />
+    <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 pb-12 pt-5 sm:px-6 lg:px-8">
+      <SeoMeta title={currentCopy.seoTitle} description={currentCopy.seoDescription} />
+      <PageTopBar />
 
-      <div className="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 pb-12 pt-5 sm:px-6 lg:px-8">
-        <SeoMeta
-          title="홈"
-          description="냉장고 재료를 입력하고 집에서 실천하기 좋은 메뉴 아이디어와 조리 흐름을 확인할 수 있는 메인 페이지입니다."
+      <div className="mt-6 space-y-6">
+        <HeroSection
+          badge={currentCopy.badge}
+          title={currentCopy.title}
+          highlight={currentCopy.highlight}
+          description={currentCopy.description}
+          benefits={[...currentCopy.benefits]}
         />
-        <PageTopBar />
 
-        <div className="mt-6 grid gap-6 lg:mt-8">
-          <HeroSection
-            badge={currentCopy.badge}
-            title={currentCopy.title}
-            highlight={currentCopy.highlight}
-            description={currentCopy.description}
-            benefits={currentCopy.benefits}
-          />
+        <IngredientInputCard
+          title={currentCopy.cardTitle}
+          description={currentCopy.cardDescription}
+          placeholder={currentCopy.placeholder}
+          hint={currentCopy.hint}
+          helper={currentCopy.helper}
+          clearLabel={currentCopy.clearLabel}
+          primaryCta={currentCopy.primaryCta}
+          secondaryCta={currentCopy.secondaryCta}
+          difficultyLabel={currentCopy.difficultyLabel}
+          difficultyOptions={difficultyOptions}
+          selectedDifficulty={selectedDifficulty}
+          inputValue={inputValue}
+          tags={visibleTags}
+          examples={[...currentCopy.examples]}
+          onDifficultyChange={setSelectedDifficulty}
+          onPrimaryAction={handleSubmit}
+          onSecondaryAction={handleRestoreSamples}
+          onInputChange={setInputValue}
+          onInputKeyDown={handleKeyDown}
+          onClearAll={() => setTags([])}
+          onRemoveTag={(tagId) => setTags((current) => current.filter((tag) => tag.id !== tagId))}
+        />
 
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_320px] lg:items-start">
-            <IngredientInputCard
-              title={currentCopy.cardTitle}
-              description={currentCopy.cardDescription}
-              placeholder={currentCopy.placeholder}
-              hint={currentCopy.hint}
-              helper={currentCopy.helper}
-              clearLabel={currentCopy.clearLabel}
-              primaryCta={currentCopy.primaryCta}
-              secondaryCta={currentCopy.secondaryCta}
-              difficultyLabel={currentCopy.difficultyLabel}
-              difficultyOptions={difficultyOptions}
-              selectedDifficulty={selectedDifficulty}
-              inputValue={inputValue}
-              tags={tags}
-              examples={currentCopy.examples}
-              onDifficultyChange={setSelectedDifficulty}
-              onPrimaryAction={commitSelectionAndNavigate}
-              onSecondaryAction={() => {
-                const nextTags = initialTags[language];
-                setTags(nextTags);
-                setSelectedIngredients(nextTags);
-              }}
-              onInputChange={handleInputChange}
-              onInputKeyDown={handleKeyDown}
-              onClearAll={() => setTags([])}
-              onRemoveTag={(tagToRemove) =>
-                setTags((currentTags) => currentTags.filter((tag) => tag !== tagToRemove))
-              }
-            />
-
-            <aside className="rounded-[2rem] border border-white/70 bg-[#f7f3ea] p-6 shadow-[0_18px_50px_rgba(93,76,53,0.08)]">
-              <p className="text-sm font-semibold tracking-[0.18em] text-brand-700">
-                {currentCopy.miniTitle}
-              </p>
-              <div className="mt-5 space-y-4">
-                {miniCards.map((item) => (
-                  <div key={item.number} className="rounded-[1.5rem] bg-white px-4 py-4">
-                    <p className="text-xs font-semibold tracking-[0.2em] text-stone-400">
-                      {item.number}
-                    </p>
-                    <p className="mt-2 text-sm leading-6 text-stone-700">{item.step}</p>
-                  </div>
-                ))}
+        <section className="rounded-[2rem] border border-white/70 bg-white/80 p-6 shadow-[0_18px_50px_rgba(73,98,56,0.08)]">
+          <h2 className="text-lg font-semibold text-stone-900">{currentCopy.miniTitle}</h2>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            {currentCopy.miniSteps.map((step, index) => (
+              <div key={step} className="rounded-[1.5rem] border border-stone-200 bg-stone-50 px-4 py-5">
+                <p className="text-xs font-semibold tracking-[0.24em] text-brand-700">0{index + 1}</p>
+                <p className="mt-3 text-sm leading-6 text-stone-700">{step}</p>
               </div>
-            </aside>
+            ))}
           </div>
-
-          <section className="rounded-[2rem] border border-white/70 bg-white/75 p-6 shadow-[0_18px_50px_rgba(73,98,56,0.08)] sm:p-8">
-            <h2 className="text-2xl font-semibold text-stone-900">{currentCopy.guideTitle}</h2>
-            <div className="mt-6 grid gap-4 md:grid-cols-3">
-              {currentCopy.guideSections.map((section) => (
-                <article key={section.title} className="rounded-[1.5rem] bg-stone-50 p-5">
-                  <h3 className="text-lg font-semibold text-stone-900">{section.title}</h3>
-                  <p className="mt-3 text-sm leading-6 text-stone-600">{section.body}</p>
-                </article>
-              ))}
-            </div>
-          </section>
-        </div>
+        </section>
       </div>
     </div>
   );

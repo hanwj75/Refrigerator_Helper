@@ -1,3 +1,3 @@
-export const SITE_NAME = "냉장고를 도와줘";
+export const SITE_NAME = "Help My Fridge";
 export const SITE_DESCRIPTION =
-  "냉장고에 있는 재료를 바탕으로 집에서 실천하기 좋은 메뉴 아이디어와 조리 흐름을 정리해 주는 웹 서비스입니다.";
+  "A practical cooking helper for turning ingredients already at home into realistic meal ideas and step-by-step cooking guidance.";

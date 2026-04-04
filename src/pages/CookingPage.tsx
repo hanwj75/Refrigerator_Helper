@@ -10,10 +10,10 @@ const copy = {
     eyebrow: "요리 진행",
     previous: "이전 단계",
     next: "다음 단계",
-    finish: "완료하기",
+    finish: "요리 완료",
     timer: "타이머",
-    missing: "진행할 레시피를 찾을 수 없습니다",
-    back: "홈으로",
+    missing: "요리 진행용 레시피를 찾을 수 없습니다.",
+    back: "홈으로 돌아가기",
   },
   en: {
     eyebrow: "Cooking",
@@ -21,7 +21,7 @@ const copy = {
     next: "Next step",
     finish: "Finish cooking",
     timer: "Timer",
-    missing: "Recipe not found for cooking",
+    missing: "Recipe not found for cooking.",
     back: "Back home",
   },
 } as const;
@@ -38,15 +38,40 @@ export function CookingPage() {
   const navigate = useNavigate();
   const language = useRecipeStore((state) => state.language);
   const setCompletedRecipeId = useRecipeStore((state) => state.setCompletedRecipeId);
-  const recipe = id ? getRecipeById(id) : null;
+  const getGeneratedRecipeDetailById = useRecipeStore((state) => state.getGeneratedRecipeDetailById);
+  const mockRecipe = id ? getRecipeById(id) : null;
+  const generatedRecipe = id ? getGeneratedRecipeDetailById(id) : null;
   const currentCopy = copy[language];
   const [stepIndex, setStepIndex] = useState(0);
-  const currentStep = recipe?.steps[stepIndex];
+
+  const steps = mockRecipe
+    ? mockRecipe.steps.map((step) => ({
+        key: step.id,
+        order: step.order,
+        title: getLocalizedText(step.title, language),
+        instruction: getLocalizedText(step.instruction, language),
+        timerSeconds: step.timerSeconds ?? null,
+      }))
+    : generatedRecipe
+      ? generatedRecipe.detail.steps.map((step) => ({
+          key: `${generatedRecipe.id}-${step.step_order}`,
+          order: step.step_order,
+          title: step.step_title,
+          instruction: step.instruction,
+          timerSeconds: step.timer_seconds,
+        }))
+      : [];
+
+  const recipeTitle = mockRecipe
+    ? getLocalizedText(mockRecipe.title, language)
+    : generatedRecipe?.detail.recipe_name ?? null;
+
+  const currentStep = steps[stepIndex];
   const [timerValue, setTimerValue] = useState(currentStep?.timerSeconds ?? 0);
 
   useEffect(() => {
     setTimerValue(currentStep?.timerSeconds ?? 0);
-  }, [currentStep?.id, currentStep?.timerSeconds]);
+  }, [currentStep?.key, currentStep?.timerSeconds]);
 
   useEffect(() => {
     if (!currentStep?.timerSeconds || timerValue <= 0) {
@@ -61,11 +86,11 @@ export function CookingPage() {
   }, [currentStep?.timerSeconds, timerValue]);
 
   const isLastStep = useMemo(
-    () => (recipe ? stepIndex === recipe.steps.length - 1 : false),
-    [recipe, stepIndex],
+    () => (steps.length > 0 ? stepIndex === steps.length - 1 : false),
+    [stepIndex, steps.length],
   );
 
-  if (!recipe || !currentStep) {
+  if (!recipeTitle || !currentStep) {
     return (
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 pb-12 pt-5 sm:px-6 lg:px-8">
         <SeoMeta title={currentCopy.eyebrow} description={currentCopy.missing} />
@@ -85,20 +110,15 @@ export function CookingPage() {
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 pb-12 pt-5 sm:px-6 lg:px-8">
-      <SeoMeta
-        title={`${getLocalizedText(recipe.title, language)} - ${currentCopy.eyebrow}`}
-        description={getLocalizedText(currentStep.instruction, language)}
-      />
+      <SeoMeta title={`${recipeTitle} - ${currentCopy.eyebrow}`} description={currentStep.instruction} />
       <PageTopBar />
 
       <section className="mt-8 rounded-[2rem] border border-white/70 bg-white p-6 shadow-[0_20px_60px_rgba(73,98,56,0.12)] sm:p-8">
         <p className="text-sm font-semibold tracking-[0.18em] text-brand-700">{currentCopy.eyebrow}</p>
-        <h1 className="mt-3 text-3xl font-semibold text-stone-900">
-          {getLocalizedText(recipe.title, language)}
-        </h1>
+        <h1 className="mt-3 text-3xl font-semibold text-stone-900">{recipeTitle}</h1>
         <div className="mt-6 flex flex-wrap gap-3">
           <span className="rounded-full bg-brand-50 px-4 py-2 text-sm text-brand-800">
-            STEP {currentStep.order} / {recipe.steps.length}
+            STEP {currentStep.order} / {steps.length}
           </span>
           {currentStep.timerSeconds ? (
             <span className="rounded-full bg-stone-900 px-4 py-2 text-sm font-semibold text-white">
@@ -109,12 +129,8 @@ export function CookingPage() {
       </section>
 
       <section className="mt-6 rounded-[2rem] border border-white/70 bg-white p-6 shadow-[0_18px_50px_rgba(73,98,56,0.1)] sm:p-8">
-        <h2 className="text-2xl font-semibold text-stone-900">
-          {getLocalizedText(currentStep.title, language)}
-        </h2>
-        <p className="mt-4 max-w-3xl text-base leading-7 text-stone-600">
-          {getLocalizedText(currentStep.instruction, language)}
-        </p>
+        <h2 className="text-2xl font-semibold text-stone-900">{currentStep.title}</h2>
+        <p className="mt-4 max-w-3xl text-base leading-7 text-stone-600">{currentStep.instruction}</p>
 
         <div className="mt-8 flex flex-wrap gap-3">
           <button
@@ -129,7 +145,7 @@ export function CookingPage() {
             type="button"
             onClick={() => {
               if (isLastStep) {
-                setCompletedRecipeId(recipe.id);
+                setCompletedRecipeId(id ?? null);
                 navigate("/complete");
                 return;
               }

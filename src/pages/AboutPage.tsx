@@ -6,36 +6,36 @@ const copy = {
   ko: {
     title: "사이트 소개",
     description:
-      "냉장고를 도와줘는 냉장고에 남은 재료를 정리하고 집에서 실천할 수 있는 메뉴 아이디어와 조리 흐름을 보여 주기 위해 만든 서비스입니다.",
-    missionTitle: "사이트가 하는 일",
+      "냉장고를 도와줘는 지금 있는 재료를 정리하고, 그 재료로 만들 수 있는 현실적인 집밥 메뉴와 조리 흐름을 보여주기 위한 서비스입니다.",
+    missionTitle: "이 사이트가 하는 일",
     missionBody:
-      "이 사이트는 사용자가 냉장고 속 재료를 바탕으로 현실적인 집밥 메뉴를 찾고, 저장하고, 단계별로 따라갈 수 있도록 돕는 것을 목표로 합니다.",
-    valueTitle: "제공 가치",
+      "냉장고 속 재료를 바탕으로 메뉴를 고르고, 필요한 추가 재료와 요리 순서를 빠르게 확인할 수 있도록 돕습니다.",
+    valueTitle: "사용자가 얻는 것",
     values: [
-      "남은 재료를 버리지 않고 활용할 수 있도록 재료 중심으로 메뉴를 정리합니다.",
-      "복잡한 설명보다 실제로 오늘 바로 시도할 수 있는 흐름을 우선합니다.",
-      "추천 결과, 상세 조리 흐름, 저장 목록을 한 사이트 안에서 이어서 확인할 수 있게 구성합니다.",
+      "재료를 먼저 기준으로 보는 현실적인 메뉴 제안",
+      "집에서 바로 따라 하기 쉬운 단계형 조리 흐름",
+      "저장과 재방문을 고려한 실용적인 사용 경험",
     ],
-    operationTitle: "운영 및 업데이트 방향",
+    operationTitle: "운영 방향",
     operationBody:
-      "현재는 로컬 상태와 mock 데이터를 기반으로 동작하며, 서비스 품질과 사용성 검증 후 점진적으로 기능을 확장할 예정입니다. 운영 관련 문의는 문의 페이지를 통해 접수할 수 있습니다.",
+      "현재 서비스는 추천 흐름과 저장 기능을 점진적으로 보강하는 단계이며, 문의 페이지를 통해 제안과 피드백을 받을 수 있습니다.",
   },
   en: {
     title: "About",
     description:
-      "Refrigerator Helper is designed to organize leftover fridge ingredients into practical meal ideas and step-by-step cooking flow for home users.",
+      "Help My Fridge is a service built to organize what you already have and turn those ingredients into practical home meal ideas and cooking flow.",
     missionTitle: "What this site does",
     missionBody:
-      "The site helps users turn fridge ingredients into realistic home-cooking ideas, save recipes they like, and follow the cooking flow from start to finish.",
+      "It helps users choose meals from fridge ingredients and quickly review extra ingredients and cooking steps.",
     valueTitle: "What users get",
     values: [
-      "Ingredient-first meal ideas that help reduce waste.",
-      "Practical cooking guidance focused on what people can actually cook today.",
-      "A connected flow from recommendation to detail, cooking steps, and saved recipes.",
+      "Practical meal ideas built around ingredients first",
+      "Step-by-step cooking flow that is easy to follow at home",
+      "A useful experience designed for saving and revisiting recipes",
     ],
     operationTitle: "How the site is operated",
     operationBody:
-      "The current version runs on local state and mock data while the product flow is being refined. Questions or feedback can be submitted through the contact page.",
+      "The service is being improved step by step around recommendation flow and saving features, and feedback can be submitted through the contact page.",
   },
 } as const;
 
@@ -45,10 +45,7 @@ export function AboutPage() {
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 pb-12 pt-5 sm:px-6 lg:px-8">
-      <SeoMeta
-        title={currentCopy.title}
-        description={currentCopy.description}
-      />
+      <SeoMeta title={currentCopy.title} description={currentCopy.description} />
       <PageTopBar />
 
       <section className="mt-8 rounded-[2rem] border border-white/70 bg-white p-8 shadow-[0_20px_60px_rgba(73,98,56,0.12)]">

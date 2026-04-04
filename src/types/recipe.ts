@@ -19,6 +19,7 @@ export type RecipeStep = {
 
 export type Recipe = {
   id: string;
+  slug: string;
   title: LocalizedText;
   summary: LocalizedText;
   description: LocalizedText;

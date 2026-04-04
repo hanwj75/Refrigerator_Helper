@@ -6,27 +6,27 @@ const copy = {
   ko: {
     title: "개인정보처리방침",
     description:
-      "냉장고를 도와줘의 개인정보 처리, 쿠키 사용, 광고 및 제3자 서비스 사용 방식에 대한 안내입니다.",
+      "냉장고를 도와줘에서 로컬 데이터, 쿠키, 광고, 외부 서비스 사용 방식을 어떻게 다루는지 안내합니다.",
     sections: [
       {
-        title: "1. 수집 및 처리되는 정보",
-        body: "현재 사이트는 계정 가입 기능 없이 이용할 수 있으며, 사용자가 입력한 재료나 저장 목록은 브라우저의 로컬 저장소에 보관될 수 있습니다. 서버 데이터베이스에 회원 정보를 저장하는 구조는 현재 적용되어 있지 않습니다.",
+        title: "1. 수집 및 처리 정보",
+        body: "현재 사이트는 재료 입력, 저장 정보, 언어 설정 등의 일부 데이터를 브라우저 저장소에 보관할 수 있습니다.",
       },
       {
         title: "2. 광고 및 쿠키",
-        body: "본 사이트는 Google AdSense 광고 스크립트를 사용할 수 있으며, 이 과정에서 쿠키 또는 기기 식별 정보가 광고 제공, 빈도 제한, 성과 측정 목적으로 활용될 수 있습니다. Google의 광고 처리 방식은 Google의 정책과 개인정보 보호 문서를 따릅니다.",
+        body: "이 사이트는 광고 제공을 위해 Google AdSense를 사용할 수 있으며, 그 과정에서 쿠키나 기기 관련 정보가 활용될 수 있습니다.",
       },
       {
-        title: "3. 제3자 서비스",
-        body: "사이트 운영 과정에서 Cloudflare Pages와 같은 호스팅 또는 배포 플랫폼이 접속 로그를 처리할 수 있습니다. 추가 분석 도구가 도입되는 경우 이 문서를 업데이트합니다.",
+        title: "3. 외부 서비스",
+        body: "배포와 운영 과정에서 Cloudflare Pages와 같은 외부 인프라가 접속 로그를 처리할 수 있습니다.",
       },
       {
-        title: "4. 이용자 선택권",
-        body: "브라우저 설정을 통해 쿠키를 제한하거나 로컬 저장소 데이터를 직접 삭제할 수 있습니다. 단, 일부 사용자 설정은 초기화될 수 있습니다.",
+        title: "4. 사용자 선택",
+        body: "브라우저 설정을 통해 쿠키를 제한하거나 로컬 저장 데이터를 직접 삭제할 수 있습니다.",
       },
       {
-        title: "5. 문의 방법",
-        body: "개인정보와 정책 관련 문의는 사이트 내 문의 페이지를 통해 접수할 수 있으며, 운영 측은 확인 가능한 범위에서 응답합니다.",
+        title: "5. 문의",
+        body: "개인정보 또는 정책 관련 문의는 사이트 내 문의 페이지를 통해 접수할 수 있습니다.",
       },
     ],
     contact: "문의 페이지로 이동",
@@ -34,27 +34,27 @@ const copy = {
   en: {
     title: "Privacy Policy",
     description:
-      "How Refrigerator Helper handles local data, cookies, advertising, and third-party services.",
+      "How Help My Fridge handles local data, cookies, advertising, and third-party services.",
     sections: [
       {
         title: "1. Information handled by the site",
-        body: "The site currently works without account registration. Ingredients entered by users and saved recipe data may be stored in the browser's local storage. A member database is not currently used.",
+        body: "The site may store some data such as ingredient input, saved data, and language settings in the browser.",
       },
       {
         title: "2. Advertising and cookies",
-        body: "This site may use Google AdSense ad scripts. Cookies or device-related identifiers may be used for ad delivery, frequency control, and performance measurement, subject to Google's own policies and privacy practices.",
+        body: "This site may use Google AdSense, and cookies or device-related information may be used for ad delivery and measurement.",
       },
       {
         title: "3. Third-party services",
-        body: "Hosting or deployment services such as Cloudflare Pages may process access logs as part of site operation. If more analytics tools are added later, this policy will be updated.",
+        body: "Infrastructure services such as Cloudflare Pages may process access logs as part of hosting and operations.",
       },
       {
         title: "4. User choices",
-        body: "Users can restrict cookies or clear local storage through browser settings. Doing so may reset saved preferences on this site.",
+        body: "Users can limit cookies or remove locally stored data through browser settings.",
       },
       {
         title: "5. Contact",
-        body: "Privacy and policy-related requests can be submitted through the contact page on this site, and the operator will review them within a reasonable scope.",
+        body: "Privacy or policy-related questions can be submitted through the contact page on this site.",
       },
     ],
     contact: "Go to contact page",
@@ -67,10 +67,7 @@ export function PrivacyPage() {
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 pb-12 pt-5 sm:px-6 lg:px-8">
-      <SeoMeta
-        title={currentCopy.title}
-        description={currentCopy.description}
-      />
+      <SeoMeta title={currentCopy.title} description={currentCopy.description} />
       <PageTopBar />
 
       <article className="mt-8 rounded-[2rem] border border-white/70 bg-white p-8 shadow-[0_20px_60px_rgba(73,98,56,0.12)]">

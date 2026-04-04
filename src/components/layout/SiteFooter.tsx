@@ -5,13 +5,13 @@ import { useRecipeStore } from "@/store/useRecipeStore";
 const footerCopy = {
   ko: {
     description:
-      "냉장고에 남은 재료를 정리하고, 집에서 실천 가능한 메뉴 아이디어를 확인할 수 있도록 돕는 서비스입니다.",
+      "냉장고 재료를 정리하고 집에서 바로 시도할 수 있는 현실적인 메뉴 아이디어를 살펴보는 서비스입니다.",
     about: "사이트 소개",
     privacy: "개인정보처리방침",
     terms: "이용약관",
     contact: "문의하기",
     notice:
-      "본 사이트는 레시피 아이디어와 조리 흐름 정리를 돕기 위한 서비스이며, 실제 재료 상태와 조리 안전은 사용자가 최종 확인해야 합니다.",
+      "이 사이트는 메뉴 아이디어와 요리 흐름을 정리해 주는 서비스입니다. 실제 조리 전에는 재료 신선도, 알레르기 여부, 조리 안전을 꼭 확인해 주세요.",
   },
   en: {
     description:
@@ -21,9 +21,9 @@ const footerCopy = {
     terms: "Terms",
     contact: "Contact",
     notice:
-      "This site is designed to help organize meal ideas and cooking flow. Users should always verify ingredients and cooking safety on their own.",
+      "This site is designed to organize meal ideas and cooking flow. Always check ingredient freshness, allergy risks, and cooking safety before you cook.",
   },
-};
+} as const;
 
 export function SiteFooter() {
   const language = useRecipeStore((state) => state.language);
