@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { PageTopBar } from "@/components/layout/PageTopBar";
 import { SeoMeta } from "@/components/seo/SeoMeta";
-import { getLocalizedText, getRecipeById } from "@/features/recipes/utils";
 import { useRecipeStore } from "@/store/useRecipeStore";
 
 const copy = {
@@ -12,7 +11,7 @@ const copy = {
     next: "다음 단계",
     finish: "요리 완료",
     timer: "타이머",
-    missing: "요리 진행용 레시피를 찾을 수 없습니다.",
+    missing: "요리 진행용 생성형 레시피를 찾을 수 없습니다.",
     back: "홈으로 돌아가기",
   },
   en: {
@@ -21,7 +20,7 @@ const copy = {
     next: "Next step",
     finish: "Finish cooking",
     timer: "Timer",
-    missing: "Recipe not found for cooking.",
+    missing: "Generated recipe not found for cooking.",
     back: "Back home",
   },
 } as const;
@@ -39,33 +38,20 @@ export function CookingPage() {
   const language = useRecipeStore((state) => state.language);
   const setCompletedRecipeId = useRecipeStore((state) => state.setCompletedRecipeId);
   const getGeneratedRecipeDetailById = useRecipeStore((state) => state.getGeneratedRecipeDetailById);
-  const mockRecipe = id ? getRecipeById(id) : null;
   const generatedRecipe = id ? getGeneratedRecipeDetailById(id) : null;
   const currentCopy = copy[language];
   const [stepIndex, setStepIndex] = useState(0);
 
-  const steps = mockRecipe
-    ? mockRecipe.steps.map((step) => ({
-        key: step.id,
-        order: step.order,
-        title: getLocalizedText(step.title, language),
-        instruction: getLocalizedText(step.instruction, language),
-        timerSeconds: step.timerSeconds ?? null,
-      }))
-    : generatedRecipe
-      ? generatedRecipe.detail.steps.map((step) => ({
-          key: `${generatedRecipe.id}-${step.step_order}`,
-          order: step.step_order,
-          title: step.step_title,
-          instruction: step.instruction,
-          timerSeconds: step.timer_seconds,
-        }))
-      : [];
+  const steps =
+    generatedRecipe?.detail.steps.map((step) => ({
+      key: `${generatedRecipe.id}-${step.step_order}`,
+      order: step.step_order,
+      title: step.step_title,
+      instruction: step.instruction,
+      timerSeconds: step.timer_seconds,
+    })) ?? [];
 
-  const recipeTitle = mockRecipe
-    ? getLocalizedText(mockRecipe.title, language)
-    : generatedRecipe?.detail.recipe_name ?? null;
-
+  const recipeTitle = generatedRecipe?.detail.recipe_name ?? null;
   const currentStep = steps[stepIndex];
   const [timerValue, setTimerValue] = useState(currentStep?.timerSeconds ?? 0);
 

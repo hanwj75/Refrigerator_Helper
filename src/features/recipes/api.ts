@@ -1,6 +1,7 @@
 import { getCurrentUser } from "@/features/auth/api";
 import { apiClient } from "@/api/client";
-import { getSupabaseClient } from "@/lib/supabase";
+import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase";
+import { slugifyRecipeName } from "@/features/recipes/utils";
 import type {
   RecipeDetailRequest,
   RecipeDetailResponse,
@@ -125,6 +126,44 @@ export async function getMyVotes() {
   }
 
   return (data ?? []) as RecipeVoteRow[];
+}
+
+export async function getRecipeMetricsByNames(recipeNames: string[]) {
+  if (!isSupabaseConfigured()) {
+    return {};
+  }
+
+  const slugs = Array.from(
+    new Set(
+      recipeNames
+        .map((name) => slugifyRecipeName(name))
+        .filter((slug) => slug.length > 0),
+    ),
+  );
+
+  if (slugs.length === 0) {
+    return {};
+  }
+
+  const client = getSupabaseClient();
+  const { data, error } = await client
+    .from("recipes")
+    .select("slug, total_save_count, total_vote_count")
+    .in("slug", slugs);
+
+  if (error) {
+    throw error;
+  }
+
+  return Object.fromEntries(
+    (data ?? []).map((row) => [
+      row.slug,
+      {
+        total_save_count: row.total_save_count ?? 0,
+        total_vote_count: row.total_vote_count ?? 0,
+      },
+    ]),
+  ) as Record<string, { total_save_count: number; total_vote_count: number }>;
 }
 
 export function requestRecipeRecommendations(input: RecommendRecipeRequest) {

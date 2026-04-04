@@ -99,7 +99,8 @@ export function HomePage() {
   const currentCopy = copy[language];
 
   const [inputValue, setInputValue] = useState("");
-  const [tags, setTags] = useState<IngredientTag[]>(starterTags);
+  const [displayTags, setDisplayTags] = useState<IngredientTag[]>(starterTags);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
 
   const difficultyOptions = useMemo(
     () =>
@@ -110,14 +111,15 @@ export function HomePage() {
     [language],
   );
 
-  const visibleTags = tags.map((tag) => ({
+  const visibleTags = displayTags.map((tag) => ({
     id: tag.id,
     label: getIngredientTagLabel(tag, language),
   }));
 
-  const validTags = tags.filter(
+  const validDisplayTags = displayTags.filter(
     (tag) => getIngredientTagLabel(tag, "ko").trim() || getIngredientTagLabel(tag, "en").trim(),
   );
+  const committedTags = hasUserInteracted ? validDisplayTags : [];
 
   const commitTag = (rawValue: string) => {
     const trimmed = rawValue.trim();
@@ -128,7 +130,8 @@ export function HomePage() {
 
     const nextTag = createIngredientTag(trimmed, language);
 
-    setTags((current) => buildUniqueTags([...current, nextTag]));
+    setHasUserInteracted(true);
+    setDisplayTags((current) => buildUniqueTags([...current, nextTag]));
     setInputValue("");
   };
 
@@ -140,7 +143,7 @@ export function HomePage() {
   };
 
   const handleSubmit = () => {
-    if (validTags.length === 0) {
+    if (committedTags.length === 0) {
       setSelectedIngredients([]);
       setHasSubmittedRecommendationRequest(false);
       setSelectedDifficulty(selectedDifficulty);
@@ -149,16 +152,17 @@ export function HomePage() {
       return;
     }
 
-    setSelectedIngredients(validTags);
+    setSelectedIngredients(committedTags);
     setSelectedDifficulty(selectedDifficulty);
     setHasSubmittedRecommendationRequest(true);
     clearGeneratedRecommendations();
-    generateRecommendations(validTags, selectedDifficulty);
+    generateRecommendations(committedTags, selectedDifficulty);
     navigate("/result");
   };
 
   const handleRestoreSamples = () => {
-    setTags(starterTags);
+    setHasUserInteracted(true);
+    setDisplayTags(starterTags);
   };
 
   return (
@@ -195,8 +199,14 @@ export function HomePage() {
           onSecondaryAction={handleRestoreSamples}
           onInputChange={setInputValue}
           onInputKeyDown={handleKeyDown}
-          onClearAll={() => setTags([])}
-          onRemoveTag={(tagId) => setTags((current) => current.filter((tag) => tag.id !== tagId))}
+          onClearAll={() => {
+            setHasUserInteracted(true);
+            setDisplayTags([]);
+          }}
+          onRemoveTag={(tagId) => {
+            setHasUserInteracted(true);
+            setDisplayTags((current) => current.filter((tag) => tag.id !== tagId));
+          }}
         />
 
         <section className="rounded-[2rem] border border-white/70 bg-white/80 p-6 shadow-[0_18px_50px_rgba(73,98,56,0.08)]">

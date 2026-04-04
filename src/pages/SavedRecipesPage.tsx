@@ -5,7 +5,6 @@ import { PageTopBar } from "@/components/layout/PageTopBar";
 import { SeoMeta } from "@/components/seo/SeoMeta";
 import { useAuthState } from "@/features/auth/hooks";
 import { getMySavedRecipes } from "@/features/recipes/api";
-import { getLocalizedText, getRecipeById } from "@/features/recipes/utils";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { useRecipeStore } from "@/store/useRecipeStore";
 
@@ -57,19 +56,12 @@ export function SavedRecipesPage() {
 
   const savedRecipes = useMemo(
     () =>
-      (savedRecipesQuery.data ?? []).map((entry) => {
-        const mockRecipe = getRecipeById(entry.recipe_id);
-
-        return {
-          recipeId: entry.recipe_id,
-          title: mockRecipe ? getLocalizedText(mockRecipe.title, language) : entry.recipe?.name ?? "Recipe",
-          description:
-            mockRecipe
-              ? getLocalizedText(mockRecipe.summary, language)
-              : entry.recipe?.description ?? "Saved recipe from your Supabase project.",
-        };
-      }),
-    [language, savedRecipesQuery.data],
+      (savedRecipesQuery.data ?? []).map((entry) => ({
+        recipeId: entry.recipe_id,
+        title: entry.recipe?.name ?? "Recipe",
+        description: entry.recipe?.description ?? "Saved recipe from your Supabase project.",
+      })),
+    [savedRecipesQuery.data],
   );
 
   return (

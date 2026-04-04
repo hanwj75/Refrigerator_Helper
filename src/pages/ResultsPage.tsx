@@ -3,32 +3,25 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { PageTopBar } from "@/components/layout/PageTopBar";
 import { SeoMeta } from "@/components/seo/SeoMeta";
-import { requestRecipeRecommendations } from "@/features/recipes/api";
+import { getRecipeMetricsByNames, requestRecipeRecommendations } from "@/features/recipes/api";
 import {
   getIngredientTagLabel,
   resolveIngredientResponseLanguage,
   toLanguageIngredients,
 } from "@/features/recipes/ingredientDictionary";
-import {
-  buildGeneratedRecommendationId,
-  getDifficultyLabel,
-  getGeneratedConfidenceScore,
-  getLocalizedText,
-  getRecipeById,
-  getRecipeIngredientGroups,
-  getSelectedIngredientSummary,
-} from "@/features/recipes/utils";
+import { getDifficultyLabel, getSelectedIngredientSummary, slugifyRecipeName } from "@/features/recipes/utils";
 import { useRecipeStore } from "@/store/useRecipeStore";
 
 const copy = {
   ko: {
     seoTitle: "추천 결과",
-    seoDescription: "입력한 재료를 기준으로 현실적인 집밥 추천 결과를 확인할 수 있습니다.",
+    seoDescription: "입력한 재료를 기준으로 바로 만들 수 있는 메뉴를 확인합니다.",
     eyebrow: "추천 결과",
     title: "지금 재료로 가능한 메뉴",
     description: "입력한 재료와 난이도를 기준으로 오늘 바로 만들 수 있는 메뉴 흐름을 정리했습니다.",
-    loading: "레시피 추천을 준비하고 있습니다...",
+    loading: "레시피를 찾는 중입니다...",
     loadingDescription: "입력한 재료를 바탕으로 현실적인 메뉴 후보를 정리하고 있습니다.",
+    refresh: "추천 결과 다시받기",
     emptyTitle: "레시피를 찾아보세요!",
     emptyDescription:
       "홈에서 재료를 입력하고 '이 재료로 메뉴 잡아보기' 버튼을 누르면 이 영역에 추천 레시피가 표시됩니다.",
@@ -36,26 +29,27 @@ const copy = {
     required: "추가 필요 재료",
     time: "예상 조리 시간",
     saves: "저장",
-    confidence: "신뢰도",
+    confidence: "추천",
     difficulty: "난이도",
     selected: "입력한 재료",
   },
   en: {
     seoTitle: "Results",
-    seoDescription: "Review realistic meal recommendations based on the ingredients you entered.",
+    seoDescription: "Review meal recommendations based on the ingredients you entered.",
     eyebrow: "Recommendations",
-    title: "Meals you can make from these ingredients",
+    title: "Meals you can make right now",
     description: "These ideas are organized around your ingredients and chosen difficulty.",
-    loading: "Preparing recipe recommendations...",
+    loading: "Finding recipe ideas...",
     loadingDescription: "We are sorting realistic meal options from the ingredients you entered.",
+    refresh: "Refresh recommendations",
     emptyTitle: "Find your next recipe",
     emptyDescription:
-      "Recipe results appear in this area after you add ingredients on the home page and press the main recommendation button.",
+      "Recipe results appear here after you add ingredients on the home page and press the main recommendation button.",
     used: "Used ingredients",
     required: "Extra ingredients",
     time: "Estimated time",
     saves: "Saves",
-    confidence: "Confidence",
+    confidence: "Votes",
     difficulty: "Difficulty",
     selected: "Selected ingredients",
   },
@@ -68,8 +62,8 @@ export function ResultsPage() {
     (state) => state.hasSubmittedRecommendationRequest,
   );
   const selectedDifficulty = useRecipeStore((state) => state.selectedDifficulty);
-  const recommendedRecipeIds = useRecipeStore((state) => state.recommendedRecipeIds);
   const generatedRecommendations = useRecipeStore((state) => state.generatedRecommendations);
+  const generateRecommendations = useRecipeStore((state) => state.generateRecommendations);
   const setGeneratedRecommendations = useRecipeStore((state) => state.setGeneratedRecommendations);
   const currentCopy = copy[language];
 
@@ -80,8 +74,10 @@ export function ResultsPage() {
       ),
     [selectedIngredients],
   );
+
   const responseLanguage = resolveIngredientResponseLanguage(validSelectedIngredients, language);
   const requestDifficulty = selectedDifficulty === "any" ? null : selectedDifficulty;
+  const shouldShowResults = hasSubmittedRecommendationRequest && validSelectedIngredients.length > 0;
 
   const recommendationQuery = useQuery({
     queryKey: [
@@ -91,7 +87,7 @@ export function ResultsPage() {
       responseLanguage,
       hasSubmittedRecommendationRequest,
     ],
-    enabled: hasSubmittedRecommendationRequest && validSelectedIngredients.length > 0 && !!requestDifficulty,
+    enabled: shouldShowResults && !!requestDifficulty,
     queryFn: () =>
       requestRecipeRecommendations({
         ingredients_owned: toLanguageIngredients(validSelectedIngredients, responseLanguage),
@@ -101,31 +97,27 @@ export function ResultsPage() {
   });
 
   useEffect(() => {
-    if (recommendationQuery.data?.recipes) {
+    if (recommendationQuery.data?.recipes && generatedRecommendations.length === 0) {
       setGeneratedRecommendations(recommendationQuery.data.recipes);
     }
-  }, [recommendationQuery.data, setGeneratedRecommendations]);
-
-  const mockResults = useMemo(
-    () => recommendedRecipeIds.map((id) => getRecipeById(id)).filter((recipe) => recipe !== null),
-    [recommendedRecipeIds],
-  );
+  }, [generatedRecommendations.length, recommendationQuery.data, setGeneratedRecommendations]);
 
   const visibleGeneratedRecommendations = useMemo(() => {
     if (generatedRecommendations.length > 0) {
       return generatedRecommendations;
     }
 
-    return (
-      recommendationQuery.data?.recipes.map((recipe, index) => ({
-        ...recipe,
-        id: buildGeneratedRecommendationId(recipe.recipe_name, index),
-      })) ?? []
-    );
-  }, [generatedRecommendations, recommendationQuery.data]);
+    return [];
+  }, [generatedRecommendations]);
+
+  const metricsQuery = useQuery({
+    queryKey: ["recipe-metrics", visibleGeneratedRecommendations.map((recipe) => recipe.recipe_name)],
+    enabled: visibleGeneratedRecommendations.length > 0,
+    queryFn: () =>
+      getRecipeMetricsByNames(visibleGeneratedRecommendations.map((recipe) => recipe.recipe_name)),
+  });
 
   const selectedIngredientSummary = getSelectedIngredientSummary(validSelectedIngredients, language);
-  const shouldShowResults = hasSubmittedRecommendationRequest && validSelectedIngredients.length > 0;
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 pb-12 pt-5 sm:px-6 lg:px-8">
@@ -143,6 +135,18 @@ export function ResultsPage() {
           <span className="rounded-full bg-stone-100 px-4 py-2 text-sm text-stone-700">
             {currentCopy.difficulty}: {getDifficultyLabel(selectedDifficulty, language)}
           </span>
+          {shouldShowResults ? (
+            <button
+              type="button"
+              onClick={() => {
+                generateRecommendations(validSelectedIngredients, selectedDifficulty);
+                void recommendationQuery.refetch();
+              }}
+              className="rounded-full border border-stone-200 bg-white px-4 py-2 text-sm font-medium text-stone-700 transition hover:border-brand-300 hover:text-brand-800"
+            >
+              {currentCopy.refresh}
+            </button>
+          ) : null}
         </div>
       </section>
 
@@ -173,113 +177,59 @@ export function ResultsPage() {
 
       {shouldShowResults ? (
         <div className="mt-6 grid gap-4">
-          {visibleGeneratedRecommendations.length > 0
-            ? visibleGeneratedRecommendations.map((recipe) => (
-                <Link
-                  key={recipe.id}
-                  to={`/recipe/${recipe.id}`}
-                  className="rounded-[2rem] border border-white/70 bg-white p-6 shadow-[0_18px_50px_rgba(73,98,56,0.1)] transition hover:-translate-y-0.5 hover:shadow-[0_24px_60px_rgba(73,98,56,0.16)]"
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <h2 className="text-2xl font-semibold text-stone-900">{recipe.recipe_name}</h2>
-                      <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-600">
-                        {recipe.short_description}
-                      </p>
-                    </div>
-                    <span className="rounded-full bg-brand-50 px-4 py-2 text-sm font-medium text-brand-800">
-                      {getDifficultyLabel(recipe.difficulty, language)}
-                    </span>
+          {visibleGeneratedRecommendations.map((recipe) => {
+            const metrics = metricsQuery.data?.[slugifyRecipeName(recipe.recipe_name)] ?? {
+              total_save_count: 0,
+              total_vote_count: 0,
+            };
+
+            return (
+              <Link
+                key={recipe.id}
+                to={`/recipe/${recipe.id}`}
+                className="rounded-[2rem] border border-white/70 bg-white p-6 shadow-[0_18px_50px_rgba(73,98,56,0.1)] transition hover:-translate-y-0.5 hover:shadow-[0_24px_60px_rgba(73,98,56,0.16)]"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h2 className="text-2xl font-semibold text-stone-900">{recipe.recipe_name}</h2>
+                    <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-600">
+                      {recipe.short_description}
+                    </p>
                   </div>
+                  <span className="rounded-full bg-brand-50 px-4 py-2 text-sm font-medium text-brand-800">
+                    {getDifficultyLabel(recipe.difficulty, language)}
+                  </span>
+                </div>
 
-                  <div className="mt-5 grid gap-4 lg:grid-cols-2">
-                    <div className="rounded-[1.5rem] bg-stone-50 p-4">
-                      <p className="text-sm font-semibold text-stone-800">{currentCopy.used}</p>
-                      <p className="mt-2 text-sm leading-6 text-stone-600">
-                        {recipe.used_ingredients.join(", ")}
-                      </p>
-                    </div>
-                    <div className="rounded-[1.5rem] bg-stone-50 p-4">
-                      <p className="text-sm font-semibold text-stone-800">{currentCopy.required}</p>
-                      <p className="mt-2 text-sm leading-6 text-stone-600">
-                        {recipe.required_ingredients.length > 0
-                          ? recipe.required_ingredients.join(", ")
-                          : "-"}
-                      </p>
-                    </div>
+                <div className="mt-5 grid gap-4 lg:grid-cols-2">
+                  <div className="rounded-[1.5rem] bg-stone-50 p-4">
+                    <p className="text-sm font-semibold text-stone-800">{currentCopy.used}</p>
+                    <p className="mt-2 text-sm leading-6 text-stone-600">
+                      {recipe.used_ingredients.join(", ")}
+                    </p>
                   </div>
-
-                  <div className="mt-5 flex flex-wrap gap-3 text-sm text-stone-600">
-                    <span className="rounded-full border border-stone-200 px-4 py-2">
-                      {currentCopy.time}: {recipe.cooking_time_minutes}m
-                    </span>
-                    <span className="rounded-full border border-stone-200 px-4 py-2">
-                      {currentCopy.saves}: {74 + recipe.used_ingredients.length * 9}
-                    </span>
-                    <span className="rounded-full border border-stone-200 px-4 py-2">
-                      {currentCopy.confidence}: {getGeneratedConfidenceScore(recipe)}%
-                    </span>
+                  <div className="rounded-[1.5rem] bg-stone-50 p-4">
+                    <p className="text-sm font-semibold text-stone-800">{currentCopy.required}</p>
+                    <p className="mt-2 text-sm leading-6 text-stone-600">
+                      {recipe.required_ingredients.length > 0 ? recipe.required_ingredients.join(", ") : "-"}
+                    </p>
                   </div>
-                </Link>
-              ))
-            : mockResults.map((recipe) => {
-                const ingredientGroups = getRecipeIngredientGroups(recipe, validSelectedIngredients);
+                </div>
 
-                return (
-                  <Link
-                    key={recipe.id}
-                    to={`/recipe/${recipe.id}`}
-                    className="rounded-[2rem] border border-white/70 bg-white p-6 shadow-[0_18px_50px_rgba(73,98,56,0.1)] transition hover:-translate-y-0.5 hover:shadow-[0_24px_60px_rgba(73,98,56,0.16)]"
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <h2 className="text-2xl font-semibold text-stone-900">
-                          {getLocalizedText(recipe.title, language)}
-                        </h2>
-                        <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-600">
-                          {getLocalizedText(recipe.summary, language)}
-                        </p>
-                      </div>
-                      <span className="rounded-full bg-brand-50 px-4 py-2 text-sm font-medium text-brand-800">
-                        {getDifficultyLabel(recipe.difficulty, language)}
-                      </span>
-                    </div>
-
-                    <div className="mt-5 grid gap-4 lg:grid-cols-2">
-                      <div className="rounded-[1.5rem] bg-stone-50 p-4">
-                        <p className="text-sm font-semibold text-stone-800">{currentCopy.used}</p>
-                        <p className="mt-2 text-sm leading-6 text-stone-600">
-                          {ingredientGroups.usedIngredients
-                            .map((ingredient) => ingredient.name[language])
-                            .join(", ")}
-                        </p>
-                      </div>
-                      <div className="rounded-[1.5rem] bg-stone-50 p-4">
-                        <p className="text-sm font-semibold text-stone-800">{currentCopy.required}</p>
-                        <p className="mt-2 text-sm leading-6 text-stone-600">
-                          {ingredientGroups.neededIngredients.length > 0
-                            ? ingredientGroups.neededIngredients
-                                .map((ingredient) => ingredient.name[language])
-                                .join(", ")
-                            : "-"}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mt-5 flex flex-wrap gap-3 text-sm text-stone-600">
-                      <span className="rounded-full border border-stone-200 px-4 py-2">
-                        {currentCopy.time}: {recipe.cookingTimeMinutes}m
-                      </span>
-                      <span className="rounded-full border border-stone-200 px-4 py-2">
-                        {currentCopy.saves}: {recipe.saves}
-                      </span>
-                      <span className="rounded-full border border-stone-200 px-4 py-2">
-                        {currentCopy.confidence}: {recipe.confidence}%
-                      </span>
-                    </div>
-                  </Link>
-                );
-              })}
+                <div className="mt-5 flex flex-wrap gap-3 text-sm text-stone-600">
+                  <span className="rounded-full border border-stone-200 px-4 py-2">
+                    {currentCopy.time}: {recipe.cooking_time_minutes}m
+                  </span>
+                  <span className="rounded-full border border-stone-200 px-4 py-2">
+                    {currentCopy.saves}: {metrics.total_save_count}
+                  </span>
+                  <span className="rounded-full border border-stone-200 px-4 py-2">
+                    {currentCopy.confidence}: {metrics.total_vote_count}
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       ) : null}
     </div>

@@ -1,7 +1,11 @@
 import type { Session } from "@supabase/supabase-js";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { getIngredientTagLabel, normalizeIngredientTag } from "@/features/recipes/ingredientDictionary";
+import {
+  getIngredientTagLabel,
+  normalizeIngredientTag,
+  sanitizeIngredientTag,
+} from "@/features/recipes/ingredientDictionary";
 import type {
   GeneratedRecipeDetail,
   GeneratedRecommendation,
@@ -9,7 +13,7 @@ import type {
   RecipeDetailResponse,
   RecommendRecipeItem,
 } from "@/features/recipes/types";
-import { buildGeneratedRecommendationId, getRecommendedRecipes } from "@/features/recipes/utils";
+import { buildGeneratedRecommendationId } from "@/features/recipes/utils";
 import type { RecipeDifficulty, UiLanguage } from "@/types/ui";
 
 export type AuthUserSummary = {
@@ -27,7 +31,6 @@ type RecipeState = {
   selectedIngredients: IngredientTag[];
   hasSubmittedRecommendationRequest: boolean;
   selectedDifficulty: RecipeDifficulty;
-  recommendedRecipeIds: string[];
   generatedRecommendations: GeneratedRecommendation[];
   generatedRecipeDetails: Record<string, GeneratedRecipeDetail>;
   selectedRecipeId: string | null;
@@ -70,7 +73,6 @@ export const useRecipeStore = create<RecipeState>()(
       selectedIngredients: [],
       hasSubmittedRecommendationRequest: false,
       selectedDifficulty: "any",
-      recommendedRecipeIds: [],
       generatedRecommendations: [],
       generatedRecipeDetails: {},
       selectedRecipeId: null,
@@ -82,45 +84,48 @@ export const useRecipeStore = create<RecipeState>()(
       setAuthReady: (authReady) => set({ authReady }),
       setSelectedIngredients: (selectedIngredients) =>
         set({
-          selectedIngredients: selectedIngredients.filter((tag, index, array) => {
-            const visibleLabel =
-              getIngredientTagLabel(tag, "ko").trim() || getIngredientTagLabel(tag, "en").trim();
+          selectedIngredients: selectedIngredients
+            .map((tag) => sanitizeIngredientTag(tag))
+            .filter((tag, index, array): tag is IngredientTag => {
+              if (!tag) {
+                return false;
+              }
 
-            if (!visibleLabel) {
-              return false;
-            }
+              const visibleLabel =
+                getIngredientTagLabel(tag, "ko").trim() || getIngredientTagLabel(tag, "en").trim();
 
-            return (
-              array.findIndex(
-                (candidate) => normalizeIngredientTag(candidate.id) === normalizeIngredientTag(tag.id),
-              ) === index
-            );
-          }),
+              if (!visibleLabel) {
+                return false;
+              }
+
+              return (
+                array.findIndex(
+                  (candidate) =>
+                    candidate &&
+                    normalizeIngredientTag(candidate.id) === normalizeIngredientTag(tag.id),
+                ) === index
+              );
+            }),
         }),
       setHasSubmittedRecommendationRequest: (hasSubmittedRecommendationRequest) =>
         set({ hasSubmittedRecommendationRequest }),
       setSelectedDifficulty: (selectedDifficulty) => set({ selectedDifficulty }),
-      generateRecommendations: (ingredients, difficulty) => {
-        const selectedIngredients = ingredients ?? get().selectedIngredients;
-        const selectedDifficulty = difficulty ?? get().selectedDifficulty;
-        const recommendedRecipeIds = getRecommendedRecipes(selectedIngredients, selectedDifficulty).map(
-          (recipe) => recipe.id,
-        );
-
-        set({ recommendedRecipeIds, hasSubmittedRecommendationRequest: true });
-      },
+      generateRecommendations: () =>
+        set({
+          generatedRecommendations: [],
+          generatedRecipeDetails: {},
+          hasSubmittedRecommendationRequest: true,
+        }),
       setGeneratedRecommendations: (recipes) =>
         set({
           generatedRecommendations: recipes.map((recipe, index) => ({
             ...recipe,
             id: buildGeneratedRecommendationId(recipe.recipe_name, index),
           })),
-          generatedRecipeDetails: {},
           hasSubmittedRecommendationRequest: true,
         }),
       clearGeneratedRecommendations: () =>
         set({
-          recommendedRecipeIds: [],
           generatedRecommendations: [],
           generatedRecipeDetails: {},
           hasSubmittedRecommendationRequest: false,

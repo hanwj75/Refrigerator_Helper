@@ -1,7 +1,11 @@
 import type { IngredientTag } from "@/features/recipes/types";
 import type { UiLanguage } from "@/types/ui";
 
-const ingredientDictionary: Array<Omit<IngredientTag, "sourceLanguage"> & { aliases: string[] }> = [
+type IngredientDictionaryEntry = Omit<IngredientTag, "sourceLanguage"> & {
+  aliases: string[];
+};
+
+const ingredientDictionary: IngredientDictionaryEntry[] = [
   { id: "tofu", ko: "두부", en: "tofu", aliases: ["두부", "tofu"] },
   { id: "onion", ko: "양파", en: "onion", aliases: ["양파", "onion"] },
   { id: "egg", ko: "계란", en: "eggs", aliases: ["계란", "달걀", "egg", "eggs"] },
@@ -46,23 +50,66 @@ export function createIngredientTag(rawValue: string, inputLanguage: UiLanguage)
   };
 }
 
-export function getIngredientTagLabel(tag: IngredientTag, language: UiLanguage) {
-  return tag[language] || tag[tag.sourceLanguage] || tag.ko || tag.en || tag.id;
+export function sanitizeIngredientTag(tag: unknown): IngredientTag | null {
+  if (typeof tag === "string") {
+    const cleaned = tag.trim();
+    return cleaned ? createIngredientTag(cleaned, "ko") : null;
+  }
+
+  if (!tag || typeof tag !== "object") {
+    return null;
+  }
+
+  const candidate = tag as Partial<IngredientTag>;
+  const id = typeof candidate.id === "string" ? candidate.id.trim() : "";
+  const ko = typeof candidate.ko === "string" ? candidate.ko.trim() : "";
+  const en = typeof candidate.en === "string" ? candidate.en.trim() : "";
+  const sourceLanguage = candidate.sourceLanguage === "en" ? "en" : "ko";
+  const fallback = ko || en || id;
+
+  if (!fallback) {
+    return null;
+  }
+
+  return {
+    id: id || normalizeIngredientTag(fallback),
+    ko,
+    en,
+    sourceLanguage,
+  };
 }
 
-export function toLanguageIngredients(tags: IngredientTag[], language: UiLanguage) {
-  return tags.map((tag) => getIngredientTagLabel(tag, language));
+export function getIngredientTagLabel(tag: unknown, language: UiLanguage) {
+  const sanitized = sanitizeIngredientTag(tag);
+
+  if (!sanitized) {
+    return "";
+  }
+
+  return (
+    sanitized[language] ||
+    sanitized[sanitized.sourceLanguage] ||
+    sanitized.ko ||
+    sanitized.en ||
+    sanitized.id
+  );
+}
+
+export function toLanguageIngredients(tags: unknown[], language: UiLanguage) {
+  return tags.map((tag) => getIngredientTagLabel(tag, language)).filter((label) => label.trim().length > 0);
 }
 
 export function resolveIngredientResponseLanguage(
-  tags: IngredientTag[],
+  tags: unknown[],
   fallbackLanguage: UiLanguage,
 ): UiLanguage {
-  if (tags.length === 0) {
+  const sanitizedTags = tags.map(sanitizeIngredientTag).filter((tag): tag is IngredientTag => tag !== null);
+
+  if (sanitizedTags.length === 0) {
     return fallbackLanguage;
   }
 
-  const counts = tags.reduce(
+  const counts = sanitizedTags.reduce(
     (acc, tag) => {
       acc[tag.sourceLanguage] += 1;
       return acc;

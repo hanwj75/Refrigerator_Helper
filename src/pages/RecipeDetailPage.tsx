@@ -1,26 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { PageTopBar } from "@/components/layout/PageTopBar";
 import { SeoMeta } from "@/components/seo/SeoMeta";
-import { useAuthState } from "@/features/auth/hooks";
-import {
-  removeVote,
-  requestRecipeDetail,
-  saveRecipe as saveRecipeRecord,
-  unsaveRecipe,
-  upvoteRecipe,
-} from "@/features/recipes/api";
+import { requestRecipeDetail } from "@/features/recipes/api";
 import { resolveIngredientResponseLanguage, toLanguageIngredients } from "@/features/recipes/ingredientDictionary";
-import {
-  getDifficultyLabel,
-  getIngredientAmount,
-  getIngredientLabel,
-  getLocalizedText,
-  getRecipeById,
-  getRecipeIngredientGroups,
-} from "@/features/recipes/utils";
-import { isSupabaseConfigured } from "@/lib/supabase";
+import { getDifficultyLabel } from "@/features/recipes/utils";
 import { useRecipeStore } from "@/store/useRecipeStore";
 
 const copy = {
@@ -28,7 +13,7 @@ const copy = {
     seoTitle: "레시피 상세",
     loading: "레시피를 가져오는 중입니다...",
     loadingDescription: "재료와 난이도에 맞는 상세 조리 단계를 준비하고 있습니다.",
-    notFound: "레시피를 찾을 수 없습니다.",
+    notFound: "상세 레시피를 찾을 수 없습니다.",
     back: "결과로 돌아가기",
     description: "레시피 설명",
     used: "사용 재료",
@@ -36,21 +21,17 @@ const copy = {
     tips: "요리 팁",
     steps: "조리 순서",
     save: "저장하기",
-    saved: "저장됨",
     vote: "추천하기",
-    voted: "추천 완료",
     start: "요리 시작",
     difficulty: "난이도",
     time: "총 조리 시간",
-    loginRequired: "이 기능은 Google 로그인 후 사용할 수 있습니다.",
-    notConfigured: "Supabase 설정이 완료되지 않았습니다.",
-    generatedOnly: "생성형 레시피는 현재 세션에서만 유지됩니다.",
+    generatedOnly: "현재 상세 페이지는 생성형 레시피만 지원합니다.",
   },
   en: {
     seoTitle: "Recipe Detail",
     loading: "Fetching recipe details...",
     loadingDescription: "We are preparing the step-by-step recipe that matches your ingredients and difficulty.",
-    notFound: "Recipe not found.",
+    notFound: "Recipe detail not found.",
     back: "Back to results",
     description: "Description",
     used: "Used ingredients",
@@ -58,37 +39,25 @@ const copy = {
     tips: "Tips",
     steps: "Steps",
     save: "Save recipe",
-    saved: "Saved",
     vote: "Like recipe",
-    voted: "Liked",
     start: "Start cooking",
     difficulty: "Difficulty",
     time: "Total cooking time",
-    loginRequired: "Sign in with Google to use this feature.",
-    notConfigured: "Supabase is not configured yet.",
-    generatedOnly: "Generated recipes are currently available only in this session.",
+    generatedOnly: "This detail page currently supports generated recipes only.",
   },
 } as const;
 
 export function RecipeDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { authUser } = useAuthState();
   const language = useRecipeStore((state) => state.language);
   const selectedIngredients = useRecipeStore((state) => state.selectedIngredients);
-  const savedRecipeIds = useRecipeStore((state) => state.savedRecipeIds);
-  const votedRecipeIds = useRecipeStore((state) => state.votedRecipeIds);
   const getGeneratedRecommendationById = useRecipeStore((state) => state.getGeneratedRecommendationById);
   const getGeneratedRecipeDetailById = useRecipeStore((state) => state.getGeneratedRecipeDetailById);
   const setGeneratedRecipeDetail = useRecipeStore((state) => state.setGeneratedRecipeDetail);
-  const saveRecipeLocally = useRecipeStore((state) => state.saveRecipe);
-  const unsaveRecipeLocally = useRecipeStore((state) => state.unsaveRecipeLocally);
-  const addVoteLocally = useRecipeStore((state) => state.addVoteLocally);
-  const removeVoteLocally = useRecipeStore((state) => state.removeVoteLocally);
   const setSelectedRecipeId = useRecipeStore((state) => state.setSelectedRecipeId);
   const currentCopy = copy[language];
 
-  const mockRecipe = id ? getRecipeById(id) : null;
   const generatedRecommendation = id ? getGeneratedRecommendationById(id) : null;
   const generatedDetail = id ? getGeneratedRecipeDetailById(id) : null;
   const responseLanguage = resolveIngredientResponseLanguage(selectedIngredients, language);
@@ -120,36 +89,6 @@ export function RecipeDetailPage() {
   }, [detailQuery.data, generatedRecommendation, id, selectedIngredients, setGeneratedRecipeDetail]);
 
   const detailData = useMemo(() => {
-    if (mockRecipe) {
-      const ingredientGroups = getRecipeIngredientGroups(mockRecipe, selectedIngredients);
-
-      return {
-        title: getLocalizedText(mockRecipe.title, language),
-        description: getLocalizedText(mockRecipe.description, language),
-        difficulty: mockRecipe.difficulty,
-        totalTime: mockRecipe.cookingTimeMinutes,
-        usedIngredients: ingredientGroups.usedIngredients.map(
-          (ingredient) =>
-            `${getIngredientLabel(ingredient, language)}${getIngredientAmount(ingredient, language) ? ` · ${getIngredientAmount(ingredient, language)}` : ""}`,
-        ),
-        requiredIngredients: ingredientGroups.neededIngredients.map(
-          (ingredient) =>
-            `${getIngredientLabel(ingredient, language)}${getIngredientAmount(ingredient, language) ? ` · ${getIngredientAmount(ingredient, language)}` : ""}`,
-        ),
-        tips:
-          language === "ko"
-            ? ["필요한 재료를 먼저 한 번에 꺼내 두면 흐름이 훨씬 편해집니다."]
-            : ["Gather the ingredients first so the cooking flow feels smoother."],
-        steps: mockRecipe.steps.map((step) => ({
-          key: step.id,
-          order: step.order,
-          title: getLocalizedText(step.title, language),
-          instruction: getLocalizedText(step.instruction, language),
-        })),
-        isGenerated: false,
-      };
-    }
-
     const generated = generatedDetail?.detail ?? detailQuery.data;
 
     if (!generated || !generatedRecommendation) {
@@ -170,84 +109,8 @@ export function RecipeDetailPage() {
         title: step.step_title,
         instruction: step.instruction,
       })),
-      isGenerated: true,
     };
-  }, [detailQuery.data, generatedDetail, generatedRecommendation, language, mockRecipe, selectedIngredients]);
-
-  const isSaved = Boolean(id && savedRecipeIds.includes(id));
-  const isVoted = Boolean(id && votedRecipeIds.includes(id));
-
-  const handleSave = async () => {
-    if (!id || !detailData) {
-      return;
-    }
-
-    if (detailData.isGenerated) {
-      setMessage(currentCopy.generatedOnly);
-      return;
-    }
-
-    if (!authUser) {
-      setMessage(currentCopy.loginRequired);
-      return;
-    }
-
-    if (!isSupabaseConfigured()) {
-      setMessage(currentCopy.notConfigured);
-      return;
-    }
-
-    try {
-      if (isSaved) {
-        await unsaveRecipe(id);
-        unsaveRecipeLocally(id);
-        setMessage("");
-        return;
-      }
-
-      await saveRecipeRecord(id);
-      saveRecipeLocally(id);
-      setMessage(currentCopy.saved);
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : currentCopy.notConfigured);
-    }
-  };
-
-  const handleVote = async () => {
-    if (!id || !detailData) {
-      return;
-    }
-
-    if (detailData.isGenerated) {
-      setMessage(currentCopy.generatedOnly);
-      return;
-    }
-
-    if (!authUser) {
-      setMessage(currentCopy.loginRequired);
-      return;
-    }
-
-    if (!isSupabaseConfigured()) {
-      setMessage(currentCopy.notConfigured);
-      return;
-    }
-
-    try {
-      if (isVoted) {
-        await removeVote(id);
-        removeVoteLocally(id);
-        setMessage("");
-        return;
-      }
-
-      await upvoteRecipe(id);
-      addVoteLocally(id);
-      setMessage(currentCopy.voted);
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : currentCopy.notConfigured);
-    }
-  };
+  }, [detailQuery.data, generatedDetail, generatedRecommendation]);
 
   if (generatedRecommendation && !detailData && detailQuery.isLoading) {
     return (
@@ -306,17 +169,17 @@ export function RecipeDetailPage() {
         <div className="mt-6 flex flex-wrap gap-3">
           <button
             type="button"
-            onClick={() => void handleSave()}
+            onClick={() => setMessage(currentCopy.generatedOnly)}
             className="rounded-full border border-stone-200 bg-white px-5 py-3 text-sm font-semibold text-stone-700"
           >
-            {isSaved ? currentCopy.saved : currentCopy.save}
+            {currentCopy.save}
           </button>
           <button
             type="button"
-            onClick={() => void handleVote()}
+            onClick={() => setMessage(currentCopy.generatedOnly)}
             className="rounded-full border border-stone-200 bg-white px-5 py-3 text-sm font-semibold text-stone-700"
           >
-            {isVoted ? currentCopy.voted : currentCopy.vote}
+            {currentCopy.vote}
           </button>
           <button
             type="button"
